@@ -38,8 +38,8 @@ export const Navbar = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, [lastScrollY, isCompactablePage]);
 
-  // Completely hide Navbar on Video Player page
-  if (location.pathname.startsWith('/player/')) {
+  // Completely hide Navbar on Video Player and Payment pages
+  if (location.pathname.startsWith('/player/') || location.pathname.startsWith('/payment')) {
     return null;
   }
 

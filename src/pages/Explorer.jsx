@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { RefreshCw, Heart, Crown, Sparkles, FilterX, Loader2, ArrowDown, Film, Zap, Infinity } from 'lucide-react';
+import { RefreshCw, Heart, Crown, Sparkles, FilterX, Loader2, ArrowDown, Film, Zap, Infinity, AlertTriangle } from 'lucide-react';
 import { SearchBar } from '../components/SearchBar';
 import { ContentCard } from '../components/ContentCard';
 import { AdCard } from '../components/AdCard';
@@ -19,7 +19,8 @@ export const Explorer = () => {
     searchQuery,
     setSearchQuery,
     isFavouritesOnlyFilter,
-    setIsFavouritesOnlyFilter
+    setIsFavouritesOnlyFilter,
+    userProfile
   } = useAppState();
 
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -27,11 +28,12 @@ export const Explorer = () => {
   const [contentList, setContentList] = useState(DUMMY_CONTENT);
   const [selectedMedia, setSelectedMedia] = useState(null);
 
-  // Typewriter Headline Above Search Bar (2 Font Colors & Left Aligned)
+  // Typewriter Headline Above Search Bar (Modern High-Impact Phrases)
   const headlinePhrases = [
-    { prefix: 'Experience ', highlight: 'Super Fast Cloud Storage' },
-    { prefix: 'Stream & Download ', highlight: 'HD Media Unlimited' },
-    { prefix: 'Ultra High-Speed ', highlight: 'Telegram Media Hub' }
+    { prefix: '⚡ Stream & Play ', highlight: 'Ultra HD 4K Cloud Media' },
+    { prefix: '🚀 Blazing Fast ', highlight: 'Direct High-Speed Downloads' },
+    { prefix: '🔒 Private & Secure ', highlight: 'Telegram Cloud Vault' },
+    { prefix: '✨ VIP Experience ', highlight: 'Zero Buffer & Instant Access' }
   ];
   const [prefixText, setPrefixText] = useState('');
   const [highlightText, setHighlightText] = useState('');
@@ -205,7 +207,7 @@ export const Explorer = () => {
       {/* Centered Title ("Terabox" Title + Tilted Crown Positioned ABOVE "MINI" Badge) */}
       <div className="flex items-center justify-center relative py-1 text-center">
         <div className="flex items-center gap-2">
-          <span className="text-2xl font-black tracking-tight bg-gradient-to-r from-cyan-300 via-sky-200 to-blue-400 bg-clip-text text-transparent">
+          <span className="text-2xl font-bold tracking-tight text-white">
             Terabox
           </span>
 
@@ -221,11 +223,40 @@ export const Explorer = () => {
         </div>
       </div>
 
-      {/* Typewriter Headline (Enlarged Bolder Font Size, Left Aligned, 2 Font Colors) */}
-      <div className="flex items-center justify-start text-left text-sm sm:text-base md:text-lg font-black h-7 px-1">
-        <span className="text-cyan-300">{prefixText}</span>
-        <span className="text-amber-400 ml-1">{highlightText}</span>
-        <span className="inline-block w-0.5 h-4.5 bg-amber-400 ml-0.5 animate-pulse" />
+      {/* Futuristic Cyber Typewriter Marquee Banner */}
+      <div className="relative overflow-hidden rounded-2xl border border-cyan-500/25 bg-gradient-to-r from-[#0c1424]/95 via-[#0e1933]/90 to-[#0c1424]/95 p-3 shadow-xl shadow-cyan-950/40 backdrop-blur-xl">
+        {/* Ambient Top Glow Line */}
+        <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-cyan-400/60 to-transparent" />
+
+        {/* Top Header Row of Ticker */}
+        <div className="flex items-center justify-between pb-1.5 border-b border-white/5 text-[9px] font-black uppercase tracking-widest">
+          <div className="flex items-center gap-1.5 text-cyan-400">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-500" />
+            </span>
+            <span className="text-cyan-300 font-bold">Cloud Stream Radar</span>
+          </div>
+
+          <div className="flex items-center gap-1 text-[8px] font-extrabold text-amber-400/90 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">
+            <Sparkles className="w-2.5 h-2.5 text-amber-400" />
+            <span>4K HDR Ready</span>
+          </div>
+        </div>
+
+        {/* Dynamic Typewriter Text Area */}
+        <div className="flex items-center pt-2 min-h-[34px] sm:min-h-[38px] overflow-hidden">
+          <div className="flex items-center flex-wrap gap-x-1.5 leading-snug">
+            <span className="text-white font-extrabold text-xs sm:text-sm tracking-tight drop-shadow-sm">
+              {prefixText}
+            </span>
+            <span className="bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500 bg-clip-text text-transparent font-black text-xs sm:text-sm tracking-tight drop-shadow-[0_0_12px_rgba(245,158,11,0.5)]">
+              {highlightText}
+            </span>
+            {/* Blinking Cyber Cursor */}
+            <span className="inline-block w-1 h-4 sm:h-4.5 rounded-full bg-gradient-to-b from-cyan-400 to-amber-400 shadow-[0_0_8px_rgba(34,211,238,0.9)] ml-0.5 align-middle animate-pulse" />
+          </div>
+        </div>
       </div>
 
       {/* Search Bar */}
@@ -234,28 +265,41 @@ export const Explorer = () => {
         isSearching={isSearching}
       />
 
-      {/* Media Stats & Credits Bar */}
-      <div className="flex items-center justify-between px-3.5 py-2 rounded-2xl bg-[#0F172A]/90 border border-white/10 text-[11px] font-semibold text-gray-300 shadow-md">
-        <div className="flex items-center gap-1.5">
-          <Film className="w-3.5 h-3.5 text-cyan-400" />
-          <span>Total Media: <strong className="text-cyan-300 font-extrabold">{filteredContent.length}</strong> items</span>
+      {/* Separated Media Count & Credits Row - Distinct Cards */}
+      <div className="flex items-center justify-between gap-2.5 pt-1.5">
+        {/* Total Media Pill */}
+        <div className="flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-[#0F172A]/90 border border-white/10 text-xs font-semibold text-gray-300 shadow-md backdrop-blur-md">
+          <Film className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+          <span>
+            Total Media: <strong className="text-white font-bold">{filteredContent.length}</strong> items
+          </span>
         </div>
 
-        {/* Dynamic Credits Badge */}
+        {/* Dynamic Credits Pill */}
         {isReferralPlan ? (
-          <div className={`relative px-3 py-1 rounded-xl text-xs font-black transition-all ${timerStyle.border} ${timerStyle.bg} ${timerStyle.text} flex items-center gap-1`}>
+          <div className={`relative px-3.5 py-2 rounded-2xl text-xs font-black transition-all ${timerStyle.border} ${timerStyle.bg} ${timerStyle.text} flex items-center gap-1.5 shadow-md backdrop-blur-md`}>
             <Infinity className="w-4 h-4 stroke-[2.5]" />
             <span>Credits</span>
           </div>
         ) : isPremium ? (
-          <div className="flex items-center gap-1 px-3 py-1 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/40 text-xs font-black shadow-sm">
+          <div className="flex items-center gap-1.5 px-3.5 py-2 rounded-2xl bg-amber-500/10 text-amber-400 border border-amber-500/40 text-xs font-black shadow-md backdrop-blur-md">
             <Infinity className="w-4 h-4 stroke-[2.5]" />
-            <span>Credits</span>
+            <span>Unlimited Credits</span>
           </div>
         ) : (
-          <div className="flex items-center gap-1 px-3 py-1 rounded-xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 text-xs font-black shadow-sm">
-            <Zap className="w-3.5 h-3.5 fill-cyan-400" />
-            <span>100/100 Credits</span>
+          <div
+            className={`flex items-center gap-2 px-3.5 py-2 rounded-2xl text-xs font-black shadow-md backdrop-blur-md transition-all ${
+              (userProfile?.credits ?? 0) <= 20
+                ? 'bg-rose-500/20 text-rose-300 border border-rose-500/50 shadow-[0_0_15px_rgba(244,63,94,0.4)] animate-pulse'
+                : 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/30'
+            }`}
+          >
+            {(userProfile?.credits ?? 0) <= 20 ? (
+              <AlertTriangle className="w-3.5 h-3.5 text-rose-400" />
+            ) : (
+              <Zap className="w-3.5 h-3.5 fill-cyan-400" />
+            )}
+            <span>{(userProfile?.credits ?? 0)}/100 Credits</span>
           </div>
         )}
       </div>
@@ -285,14 +329,29 @@ export const Explorer = () => {
             </span>
           </button>
 
-          <button
+          {/* Redesigned Modern Refresh Button */}
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.92 }}
             onClick={handleRefresh}
             disabled={isRefreshing}
             aria-label="Refresh feed"
-            className="p-1.5 rounded-full glass-panel text-gray-300 hover:text-white border border-white/10 hover:border-white/20 transition-all active:scale-90 cursor-pointer disabled:opacity-60"
+            className={`group relative flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all duration-300 border cursor-pointer select-none overflow-hidden ${
+              isRefreshing
+                ? 'bg-cyan-500/20 text-cyan-300 border-cyan-400/50 shadow-[0_0_20px_rgba(6,182,212,0.45)]'
+                : 'glass-panel text-gray-300 hover:text-white border-white/10 hover:border-cyan-500/40 hover:shadow-[0_0_16px_rgba(6,182,212,0.3)] bg-gradient-to-r from-slate-900/90 to-slate-800/80 hover:from-cyan-950/40 hover:to-slate-900/90'
+            }`}
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-cyan-400' : ''}`} />
-          </button>
+            <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-cyan-400/15 to-transparent pointer-events-none" />
+            <RefreshCw
+              className={`w-3.5 h-3.5 transition-transform duration-500 ${
+                isRefreshing ? 'animate-spin text-cyan-400' : 'group-hover:rotate-180 text-cyan-400'
+              }`}
+            />
+            <span className="text-[11px] font-extrabold tracking-wide">
+              {isRefreshing ? 'Syncing...' : 'Refresh'}
+            </span>
+          </motion.button>
         </div>
 
         <AnimatePresence>

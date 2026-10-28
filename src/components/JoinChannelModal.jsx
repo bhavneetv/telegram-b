@@ -150,44 +150,69 @@ export const JoinChannelModal = ({ isOpen, onClose, item }) => {
           </motion.div>
         )}
 
-        {/* STEP 2: Loading Popup (Appears AFTER clicking I've Joined OR on all future video clicks) */}
+        {/* STEP 2: Immersive Cinema Loading Screen */}
         {step === 'verifying' && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
+            initial={{ opacity: 0, scale: 0.92 }}
             animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-            className="relative z-10 flex flex-col items-center justify-center p-8 glass-panel rounded-3xl border border-cyan-500/40 bg-[#0F172A]/95 text-white max-w-xs text-center shadow-2xl gap-3"
+            exit={{ opacity: 0, scale: 0.92 }}
+            transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+            className="relative z-10 flex flex-col items-center justify-center w-full max-w-[280px] rounded-[28px] overflow-hidden border border-white/15 shadow-[0_0_60px_rgba(6,182,212,0.2)] text-white"
           >
-            {/* Shuffling Icon Spinner */}
-            <div className="relative flex items-center justify-center">
-              <div className="w-16 h-16 rounded-full border-2 border-cyan-500/30 border-t-cyan-400 border-r-amber-400 animate-spin" />
-              
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={shuffledIconIndex}
-                  initial={{ opacity: 0, scale: 0.6 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.6 }}
-                  transition={{ duration: 0.4 }}
-                  className="absolute"
-                >
-                  <CurrentMediaIcon className={`w-7 h-7 ${currentIconColor}`} />
-                </motion.div>
-              </AnimatePresence>
+            {/* Blurred Thumbnail Backdrop */}
+            <div className="absolute inset-0 z-0">
+              <img
+                src={item.thumbnail}
+                alt=""
+                className="w-full h-full object-cover scale-110 blur-xl opacity-40"
+              />
+              <div className="absolute inset-0 bg-gradient-to-b from-[#070A12]/80 via-[#0a0f1e]/90 to-[#070A12]/95" />
             </div>
 
-            {/* Simple Clean "Loading..." Text */}
-            <h3 className="text-sm font-extrabold text-cyan-300">Loading...</h3>
-            <p className="text-[11px] text-gray-300">Connecting fast streaming server</p>
+            {/* Content Layer */}
+            <div className="relative z-10 flex flex-col items-center p-7 gap-4">
+              {/* Orbiting Ring Spinner with Thumbnail Preview */}
+              <div className="relative flex items-center justify-center w-24 h-24">
+                {/* Outer Orbit */}
+                <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-cyan-400 border-r-blue-500 animate-spin" style={{ animationDuration: '1.2s' }} />
+                {/* Inner Orbit (counter-rotate) */}
+                <div className="absolute inset-1.5 rounded-full border border-transparent border-b-amber-400/60 border-l-cyan-300/40 animate-spin" style={{ animationDuration: '1.8s', animationDirection: 'reverse' }} />
+                {/* Center Thumbnail Circle */}
+                <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-white/20 shadow-xl shadow-black/50">
+                  <img
+                    src={item.thumbnail}
+                    alt={item.title}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                {/* Ambient Glow behind */}
+                <div className="absolute inset-0 rounded-full bg-cyan-400/10 blur-xl pointer-events-none" />
+              </div>
 
-            {/* X Close Button Below Spinner */}
-            <button
-              onClick={handleCancel}
-              className="mt-2 p-2.5 rounded-full bg-white/10 hover:bg-white/20 text-gray-300 hover:text-white border border-white/15 transition-all active:scale-90 cursor-pointer shadow-lg flex items-center justify-center"
-              title="Cancel"
-            >
-              <X className="w-4 h-4" />
-            </button>
+              {/* Title */}
+              <div className="flex flex-col items-center gap-1">
+                <h3 className="text-[13px] font-black text-white tracking-tight text-center leading-snug line-clamp-2 px-2">{item.title}</h3>
+                <span className="text-[10px] font-bold text-cyan-400 uppercase tracking-widest">Preparing Stream</span>
+              </div>
+
+              {/* Progress Bar */}
+              <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
+                <motion.div
+                  initial={{ width: '0%' }}
+                  animate={{ width: '100%' }}
+                  transition={{ duration: 1.4, ease: 'easeInOut' }}
+                  className="h-full bg-gradient-to-r from-cyan-500 via-blue-500 to-cyan-400 rounded-full shadow-[0_0_12px_rgba(6,182,212,0.8)]"
+                />
+              </div>
+
+              {/* Cancel Button */}
+              <button
+                onClick={handleCancel}
+                className="px-5 py-1.5 rounded-full bg-white/8 hover:bg-white/15 text-[11px] font-bold text-gray-400 hover:text-white border border-white/10 transition-all active:scale-90 cursor-pointer"
+              >
+                Cancel
+              </button>
+            </div>
           </motion.div>
         )}
       </div>

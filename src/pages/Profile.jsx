@@ -173,9 +173,17 @@ export const Profile = () => {
         {/* Card 3: CREDITS */}
         <motion.div
           whileHover={{ y: -2 }}
-          className="glass-panel p-3.5 rounded-2xl border border-white/10 flex flex-col items-center justify-center text-center bg-[#0F172A]/90 shadow-md"
+          className={`glass-panel p-3.5 rounded-2xl border flex flex-col items-center justify-center text-center shadow-md transition-all ${
+            !isReferralPlan && !isPremium && userProfile.credits <= 20
+              ? 'bg-[#180a0f]/90 border-rose-500/50 shadow-[0_0_15px_rgba(244,63,94,0.25)]'
+              : 'border-white/10 bg-[#0F172A]/90'
+          }`}
         >
-          <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">
+          <span
+            className={`text-[10px] font-black uppercase tracking-widest mb-1 ${
+              !isReferralPlan && !isPremium && userProfile.credits <= 20 ? 'text-rose-400' : 'text-gray-400'
+            }`}
+          >
             CREDITS
           </span>
           {isReferralPlan ? (
@@ -192,10 +200,22 @@ export const Profile = () => {
             </>
           ) : (
             <>
-              <span className="text-sm font-black text-cyan-400">
+              <span
+                className={`text-sm font-black ${
+                  userProfile.credits <= 20
+                    ? 'text-rose-400 drop-shadow-[0_0_8px_rgba(244,63,94,0.6)]'
+                    : 'text-cyan-400'
+                }`}
+              >
                 {userProfile.credits}/100
               </span>
-              <span className="text-[9px] font-medium text-gray-400 mt-0.5">Available</span>
+              <span
+                className={`text-[9px] font-semibold mt-0.5 ${
+                  userProfile.credits <= 20 ? 'text-rose-300 font-bold' : 'text-gray-400'
+                }`}
+              >
+                {userProfile.credits <= 20 ? 'Low Balance' : 'Available'}
+              </span>
             </>
           )}
         </motion.div>
@@ -387,7 +407,7 @@ export const Profile = () => {
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      deleteFavourite(favId);
+                      deleteFavourite(favId, item.title);
                     }}
                     className="p-2 rounded-xl text-gray-400 hover:text-rose-400 hover:bg-rose-500/15 transition-colors ml-2 shrink-0 cursor-pointer"
                   >

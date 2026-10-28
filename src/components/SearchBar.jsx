@@ -9,38 +9,6 @@ export const SearchBar = ({ onSearch, isSearching }) => {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const wrapperRef = useRef(null);
 
-  // Typewriter Animation: Clean descriptive search phrases
-  const cyclingTerms = [
-    'high-speed HD movies, 4K videos & wallpack',
-    'trending anime, series, music & software',
-    'unlimited Terabox cloud storage media'
-  ];
-  const [termText, setTermText] = useState('');
-  const [termIdx, setTermIdx] = useState(0);
-  const [isDeleting, setIsDeleting] = useState(false);
-
-  useEffect(() => {
-    const currentTerm = cyclingTerms[termIdx];
-    const typingSpeed = isDeleting ? 30 : 60;
-
-    const timeout = setTimeout(() => {
-      if (!isDeleting) {
-        setTermText(currentTerm.substring(0, termText.length + 1));
-        if (termText === currentTerm) {
-          setTimeout(() => setIsDeleting(true), 2200);
-        }
-      } else {
-        setTermText(currentTerm.substring(0, termText.length - 1));
-        if (termText === '') {
-          setIsDeleting(false);
-          setTermIdx((prev) => (prev + 1) % cyclingTerms.length);
-        }
-      }
-    }, typingSpeed);
-
-    return () => clearTimeout(timeout);
-  }, [termText, isDeleting, termIdx]);
-
   // Filter autosuggestions
   useEffect(() => {
     if (query.trim().length >= 2) {
@@ -90,23 +58,19 @@ export const SearchBar = ({ onSearch, isSearching }) => {
         className="relative flex-1 flex items-center"
       >
         <div className="relative flex items-center w-full glass-panel rounded-2xl overflow-hidden focus-within:ring-2 focus-within:ring-cyan-500/50 transition-all bg-[#0F172A]/90 border border-white/10">
-          {/* Long Typewriter Placeholder bounded cleanly before Search button */}
+          {/* Left-side Grey Search Icon inside input */}
+          <Search className="w-4 h-4 text-gray-400 ml-3.5 shrink-0 pointer-events-none" />
+
+          {/* Simple Clean Input with Standard Placeholder */}
           <div className="relative flex-1 flex items-center">
             <input
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onFocus={() => query.trim().length >= 2 && setShowSuggestions(true)}
-              className="w-full py-2.5 px-3 bg-transparent text-xs text-white focus:outline-none relative z-10"
+              placeholder="Search high-speed movies, 4K videos & files..."
+              className="w-full py-2.5 px-3 bg-transparent text-xs text-white placeholder:text-gray-500 focus:outline-none relative z-10"
             />
-            
-            {!query && (
-              <div className="absolute left-3 pointer-events-none text-xs text-gray-400 flex items-center overflow-hidden max-w-[calc(100%-85px)] pr-2">
-                <span className="font-semibold text-gray-300 shrink-0">Search </span>
-                <span className="text-cyan-400 font-bold ml-1 truncate">{termText}</span>
-                <span className="inline-block w-0.5 h-3.5 bg-cyan-400 ml-0.5 animate-pulse shrink-0" />
-              </div>
-            )}
           </div>
 
           {query && (
@@ -119,12 +83,12 @@ export const SearchBar = ({ onSearch, isSearching }) => {
             </button>
           )}
 
-          {/* Separate Search Icon Button */}
+          {/* Search Button (No search icon, text only) */}
           <motion.button
             type="submit"
             whileTap={{ scale: 0.95 }}
             disabled={isSearching}
-            className={`m-1 px-3.5 py-2 rounded-xl text-xs font-bold text-white flex items-center justify-center gap-1 transition-all shadow-md cursor-pointer shrink-0 ${
+            className={`m-1 px-4 py-2 rounded-xl text-xs font-bold text-white flex items-center justify-center transition-all shadow-md cursor-pointer shrink-0 ${
               isSearching
                 ? 'bg-cyan-600/50 cursor-not-allowed'
                 : 'bg-gradient-to-r from-cyan-500 to-blue-600 hover:opacity-90'
@@ -133,10 +97,7 @@ export const SearchBar = ({ onSearch, isSearching }) => {
             {isSearching ? (
               <Loader2 className="w-3.5 h-3.5 animate-spin text-white" />
             ) : (
-              <>
-                <Search className="w-3.5 h-3.5" />
-                <span>Search</span>
-              </>
+              <span>Search</span>
             )}
           </motion.button>
         </div>

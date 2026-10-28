@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="150" height="150" viewBox="0 0 150 150" role="img" aria-label="TERABOX MINI loading">
+  <defs>
+    <clipPath id="reveal">
+      <rect x="0" y="0" width="150" height="0">
+        <animate attributeName="height"
+                 values="0;150;150;150"
+                 keyTimes="0;0.6;0.85;1"
+                 dur="2.4s" repeatCount="indefinite"
+                 calcMode="spline"
+                 keySplines="0.4 0 0.2 1;0 0 1 1;0 0 1 1"/>
+      </rect>
+    </clipPath>
+    <linearGradient id="blue" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#4DA3FF"/>
+      <stop offset="1" stop-color="#1565FF"/>
+    </linearGradient>
+    <linearGradient id="sweep" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#1E88E5" stop-opacity="0"/>
+      <stop offset="0.5" stop-color="#1E88E5" stop-opacity="1"/>
+      <stop offset="1" stop-color="#1E88E5" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Text group: revealed from top to bottom, then fades and loops -->
+  <g opacity="1">
+    <animate attributeName="opacity"
+             values="1;1;0;0"
+             keyTimes="0;0.85;0.97;1"
+             dur="2.4s" repeatCount="indefinite"/>
+    <g clip-path="url(#reveal)" fill="url(#blue)" font-family="Arial, Helvetica, sans-serif" font-weight="800" text-anchor="middle">
+      <text x="75" y="72" font-size="24" textLength="112" lengthAdjust="spacingAndGlyphs">TERABOX</text>
+      <text x="75" y="106" font-size="32" textLength="76" lengthAdjust="spacingAndGlyphs">MINI</text>
+    </g>
+  </g>
+
+  <!-- Scan line moving top to bottom with the reveal -->
+  <rect x="15" y="0" width="120" height="3" rx="1.5" fill="url(#sweep)" opacity="0">
+    <animate attributeName="y"
+             values="0;148;148"
+             keyTimes="0;0.6;1"
+             dur="2.4s" repeatCount="indefinite"
+             calcMode="spline"
+             keySplines="0.4 0 0.2 1;0 0 1 1"/>
+    <animate attributeName="opacity"
+             values="0;1;1;0;0"
+             keyTimes="0;0.05;0.55;0.62;1"
+             dur="2.4s" repeatCount="indefinite"/>
+  </rect>
+</svg>

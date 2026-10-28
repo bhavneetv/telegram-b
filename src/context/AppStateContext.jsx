@@ -74,27 +74,40 @@ export const AppStateProvider = ({ children }) => {
     }, 4500);
   };
 
-  const toggleFavourite = (id) => {
-    setFavourites((prev) => {
-      const exists = prev.includes(id);
-      if (exists) {
-        toast.info("Removed from favourites");
-        return prev.filter((item) => item !== id);
-      } else {
-        toast.success("Added to favourites!");
-        return [...prev, id];
-      }
-    });
+  const toggleFavourite = (id, title) => {
+    const exists = favourites.includes(id);
+    if (exists) {
+      setFavourites((prev) => prev.filter((item) => item !== id));
+      toast.info("Removed from Favourites", {
+        description: title ? `"${title}" removed from your library.` : "Item removed from your saved library.",
+        duration: 2500,
+        id: `fav-${id}`
+      });
+    } else {
+      setFavourites((prev) => [...prev, id]);
+      toast.success("Added to Favourites", {
+        description: title ? `"${title}" saved to your library.` : "Saved to your library for quick access.",
+        duration: 2500,
+        id: `fav-${id}`
+      });
+    }
   };
 
-  const deleteFavourite = (id) => {
+  const deleteFavourite = (id, title) => {
     setFavourites((prev) => prev.filter((item) => item !== id));
-    toast.info("Item removed");
+    toast.info("Removed from Favourites", {
+      description: title ? `"${title}" removed.` : "Item removed from your library.",
+      duration: 2500,
+      id: `fav-${id}`
+    });
   };
 
   const clearAllFavourites = () => {
     setFavourites([]);
-    toast.info("All favourites cleared");
+    toast.info("All Favourites Cleared", {
+      description: "Your saved favourites library is now empty.",
+      duration: 2500
+    });
   };
 
   const activatePlan = (planName) => {
