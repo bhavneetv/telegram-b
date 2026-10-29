@@ -71,7 +71,7 @@ export const AppStateProvider = ({ children }) => {
 
     setTimeout(() => {
       setShowCreditPopup(false);
-    }, 4500);
+    }, 2200);
   };
 
   const toggleFavourite = (id, title) => {
@@ -110,17 +110,39 @@ export const AppStateProvider = ({ children }) => {
     });
   };
 
+  const [activationSuccess, setActivationSuccess] = useState(null);
+
   const activatePlan = (planName) => {
+    let validityText = '30 Days Access';
+    let validityDays = 30;
+
     if (planName.includes("Free")) {
+      validityText = '1 Hour Trial Pass';
+      validityDays = 1;
       setCurrentPlan("Lite (Free 1hr)");
       setReferralTimeLeft(3600); // 60 mins
       setIsPremium(true);
-      toast.success("🎉 1-Hour Free HD Access Activated!");
+    } else if (planName.includes("Daily")) {
+      validityText = '1 Day VIP Access (24 Hours)';
+      validityDays = 1;
+      setCurrentPlan("Lite Daily Pass");
+      setIsPremium(true);
     } else {
+      validityText = '30 Days VIP Access';
+      validityDays = 30;
       setCurrentPlan(planName);
       setIsPremium(true);
-      toast.success(`🎉 ${planName} Activated! Premium Gold Unlocked.`);
     }
+
+    setActivationSuccess({
+      planName,
+      validityText,
+      validityDays
+    });
+  };
+
+  const closeActivationSuccess = () => {
+    setActivationSuccess(null);
   };
 
   return (
@@ -146,6 +168,8 @@ export const AppStateProvider = ({ children }) => {
         isFavouritesOnlyFilter,
         setIsFavouritesOnlyFilter,
         activatePlan,
+        activationSuccess,
+        closeActivationSuccess,
         showCreditPopup,
         setShowCreditPopup,
         triggerVideoPlayNotification

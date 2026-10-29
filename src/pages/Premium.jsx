@@ -11,19 +11,18 @@ import {
   ShieldCheck,
   Copy,
   Loader2,
-  CreditCard,
   Star,
   ChevronRight,
-  ChevronDown,
+  ChevronLeft,
   CheckCircle2,
   Clock,
   Gem,
   Flame,
-  Award,
   ArrowRight,
   DownloadCloud,
   Film,
-  QrCode
+  QrCode,
+  RefreshCw
 } from 'lucide-react';
 import { useAppState } from '../context/AppStateContext';
 import { ModalShell } from '../components/ModalShell';
@@ -42,16 +41,16 @@ const TIERS = {
     barLit: 'bg-emerald-400',
     button: 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-500/25'
   },
-  cyan: {
+  silver: {
     level: 2,
     label: 'Daily VIP',
     badge: '24-Hour Pass',
-    text: 'text-cyan-400',
-    accentText: 'text-cyan-400',
-    border: 'border-cyan-500/40',
-    glow: 'shadow-cyan-500/20',
-    barLit: 'bg-cyan-400',
-    button: 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/50 hover:bg-cyan-500/30 shadow-md'
+    text: 'text-amber-300',
+    accentText: 'text-amber-300',
+    border: 'border-white/10',
+    glow: 'shadow-md',
+    barLit: 'bg-amber-300',
+    button: 'bg-white/10 text-white border border-white/20 hover:bg-white/15 shadow-md'
   },
   gold: {
     level: 3,
@@ -94,16 +93,16 @@ export const Premium = () => {
   const { isPremium, currentPlan, activatePlan, userProfile, setUserProfile } = useAppState();
 
   const [isLoading, setIsLoading] = useState(false);
-  const [showCompareTable, setShowCompareTable] = useState(false);
   const [showFreeModal, setShowFreeModal] = useState(false);
   const [showPayModal, setShowPayModal] = useState(false);
+  const [paySubView, setPaySubView] = useState('choose'); // 'choose' | 'stars'
   const [selectedPlan, setSelectedPlan] = useState(null);
-  const [paymentMethod, setPaymentMethod] = useState(null);
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [isProcessingStars, setIsProcessingStars] = useState(false);
+  const [isRefreshingStars, setIsRefreshingStars] = useState(false);
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => setIsLoading(false), 350);
+    const timer = setTimeout(() => setIsLoading(false), 300);
     return () => clearTimeout(timer);
   }, []);
 
@@ -111,7 +110,9 @@ export const Premium = () => {
     {
       id: 'lite-free',
       name: 'Lite (Free 1hr)',
-      price: 'Free',
+      priceDisplay: 'Free',
+      priceUpi: 'Free',
+      priceStars: 'Free',
       subtitle: 'Unlock via 1 Referral Invite',
       duration: '1-Hour Full Access',
       badge: 'Free Trial',
@@ -125,18 +126,20 @@ export const Premium = () => {
         'Zero buffering cloud speed',
         'No direct file downloads'
       ],
-      cta: 'Activate Free Access'
+      cta: 'Activate Free Access Key'
     },
     {
       id: 'lite-paid',
-      name: 'Lite Daily Pass',
-      price: '₹10 / 10 Stars',
+      name: 'Daily VIP Pass',
+      priceDisplay: '₹10 / 10 Stars',
+      priceUpi: '₹10',
+      priceStars: '10 Stars',
       subtitle: 'Full 24-Hour VIP Pass',
       duration: '24 Hours Access',
       badge: 'Daily VIP',
       isPopular: false,
       isFree: false,
-      tone: TIERS.cyan,
+      tone: TIERS.silver,
       speedLabel: '5 files / min',
       features: [
         'Unlimited 4K HD streaming',
@@ -149,7 +152,9 @@ export const Premium = () => {
     {
       id: 'premium-popular',
       name: 'Royal Sovereign VIP',
-      price: '₹20 / 20 Stars',
+      priceDisplay: '₹20 / 20 Stars',
+      priceUpi: '₹20',
+      priceStars: '20 Stars',
       subtitle: 'Most Popular Monthly Royal Club',
       duration: '30 Days VIP Access',
       badge: '👑 Royal Choice',
@@ -169,51 +174,6 @@ export const Premium = () => {
     }
   ];
 
-  const royalPerks = [
-    {
-      icon: DownloadCloud,
-      title: 'Turbo Direct Downloads',
-      desc: 'Bypass download queues with 10 files/min high-speed direct downloads.',
-      color: 'text-amber-400',
-      bg: 'bg-amber-400/10 border-amber-400/20'
-    },
-    {
-      icon: Crown,
-      title: 'Royal Crown Identity',
-      desc: 'Shine with a golden VIP crown emblem on your profile across the app.',
-      color: 'text-yellow-400',
-      bg: 'bg-yellow-400/10 border-yellow-400/20'
-    },
-    {
-      icon: ShieldCheck,
-      title: '100% Zero Advertisements',
-      desc: 'Completely ad-free, sponsor-free experience without annoying interruptions.',
-      color: 'text-emerald-400',
-      bg: 'bg-emerald-400/10 border-emerald-400/20'
-    },
-    {
-      icon: Film,
-      title: 'Ultra HD 4K HDR',
-      desc: 'Stream full uncompressed bitrate video with instant seek and play.',
-      color: 'text-sky-400',
-      bg: 'bg-sky-400/10 border-sky-400/20'
-    },
-    {
-      icon: Zap,
-      title: 'Unlimited Daily Credits',
-      desc: 'No credit limits or daily deductions — enjoy unlimited video consumption.',
-      color: 'text-amber-400',
-      bg: 'bg-amber-400/10 border-amber-400/20'
-    },
-    {
-      icon: Gem,
-      title: 'VIP Dedicated Servers',
-      desc: 'Connected to lightning-fast dedicated Telegram CDN server endpoints.',
-      color: 'text-purple-400',
-      bg: 'bg-purple-400/10 border-purple-400/20'
-    }
-  ];
-
   const handleSelectPlan = (plan) => {
     if (isPremium && (currentPlan === plan.name || (currentPlan.includes('Royal') && plan.isPopular))) {
       toast.info('You are already an active subscriber to this plan', {
@@ -227,7 +187,7 @@ export const Premium = () => {
       setShowFreeModal(true);
     } else {
       setSelectedPlan(plan);
-      setPaymentMethod(null);
+      setPaySubView('choose');
       setShowPayModal(true);
     }
   };
@@ -236,37 +196,39 @@ export const Premium = () => {
     triggerHaptic('medium');
     setShowPayModal(false);
     const plan = selectedPlan?.name || 'Royal Sovereign VIP';
-    const price = selectedPlan?.price || '₹20';
+    const price = selectedPlan?.priceUpi || '₹20';
+    // Navigate with rupee price only - zero mention of Stars
     navigate(`/payment/upi?plan=${encodeURIComponent(plan)}&price=${encodeURIComponent(price)}`);
   };
 
-  const handleConfirmPayment = (method) => {
-    setPaymentMethod(method);
-    triggerHaptic('medium');
-    setIsProcessing(true);
+  const handleOpenStarsFlow = () => {
+    triggerHaptic('light');
+    setPaySubView('stars');
+  };
+
+  const handleRefreshStars = () => {
+    triggerHaptic('light');
+    setIsRefreshingStars(true);
+    setTimeout(() => {
+      setIsRefreshingStars(false);
+      toast.info('Telegram Stars invoice refreshed', {
+        description: 'Ready to receive confirmation.'
+      });
+    }, 600);
+  };
+
+  const handleConfirmStarsPayment = () => {
+    triggerHaptic('heavy');
+    setIsProcessingStars(true);
 
     setTimeout(() => {
-      setIsProcessing(false);
+      setIsProcessingStars(false);
       setShowPayModal(false);
 
-      try {
-        confetti({
-          particleCount: 120,
-          spread: 90,
-          origin: { y: 0.6 },
-          colors: ['#F59E0B', '#FFD700', '#FCD34D', '#FFFFFF']
-        });
-      } catch (e) {
-        // ignore
-      }
-
       const activatedName = selectedPlan ? selectedPlan.name : 'Royal Sovereign VIP';
+      // activatePlan triggers the fixed centered SubscriptionSuccessModal with validity in days!
       activatePlan(activatedName);
-      toast.success(`🎉 ${activatedName} Activated!`, {
-        description: 'Welcome to the Terabox Royal VIP Club. All perks unlocked!',
-        duration: 3500
-      });
-    }, 1400);
+    }, 900);
   };
 
   const handleCopyLink = () => {
@@ -280,11 +242,6 @@ export const Premium = () => {
     }));
     activatePlan('Lite (Free 1hr)');
     setShowFreeModal(false);
-
-    toast.success('🎉 Test Referral Verified! 1-Hour Access Activated.', {
-      description: 'Enjoy free HD streaming access.',
-      duration: 3000
-    });
     setTimeout(() => setCopied(false), 2500);
   };
 
@@ -307,90 +264,6 @@ export const Premium = () => {
 
   return (
     <div className="flex flex-col gap-6 pb-28 px-4 max-w-4xl mx-auto pt-[65px] text-white">
-      {/* ROYAL VIP / LOYAL ACTIVE CARD (ONLY SHOWN WHEN SUBSCRIBED) */}
-      {isPremium && (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.96 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="relative flex flex-col p-6 rounded-3xl border-2 border-amber-400/70 bg-gradient-to-br from-amber-950/70 via-[#0d0f17] to-[#07090e] backdrop-blur-2xl shadow-[0_0_40px_rgba(245,158,11,0.25)] overflow-hidden"
-        >
-          {/* Subtle gold mesh aura */}
-          <div className="absolute top-0 right-0 -mr-16 -mt-16 w-56 h-56 bg-gradient-to-br from-amber-500/20 to-yellow-600/10 rounded-full blur-3xl pointer-events-none" />
-
-          {/* Top Row: Digital Black Card Header */}
-          <div className="flex items-center justify-between gap-3 pb-4 border-b border-amber-500/20 relative z-10">
-            <div className="flex items-center gap-3">
-              <div className="p-3 rounded-2xl bg-gradient-to-br from-amber-400 to-yellow-500 text-black shadow-lg shadow-amber-500/40">
-                <Crown className="w-6 h-6 fill-black" />
-              </div>
-              <div>
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[10px] font-black text-amber-400 uppercase tracking-widest">
-                    Royal VIP Member
-                  </span>
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping" />
-                </div>
-                <h2 className="text-base sm:text-xl font-black text-white">
-                  Active Tier: <span className="bg-gradient-to-r from-amber-300 via-yellow-300 to-amber-500 bg-clip-text text-transparent">{currentPlan}</span>
-                </h2>
-              </div>
-            </div>
-
-            <div className="flex flex-col items-end">
-              <span className="px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 text-xs font-black flex items-center gap-1.5 shadow-sm">
-                <CheckCircle2 className="w-3.5 h-3.5 text-amber-400" />
-                VIP Loyal Status
-              </span>
-              <span className="text-[10px] font-mono text-gray-400 mt-1">
-                ID: ROYAL-VIP-{userProfile.userId || '7892'}
-              </span>
-            </div>
-          </div>
-
-          {/* VIP Privileges Active Summary */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 py-4 border-b border-white/5 relative z-10">
-            <div className="p-2.5 rounded-xl bg-black/40 border border-white/5 flex flex-col gap-0.5">
-              <span className="text-[10px] text-gray-400 font-medium">Download Speed</span>
-              <span className="text-xs font-black text-amber-400 flex items-center gap-1">
-                <Zap className="w-3.5 h-3.5 fill-amber-400" /> 10 Files / Min
-              </span>
-            </div>
-            <div className="p-2.5 rounded-xl bg-black/40 border border-white/5 flex flex-col gap-0.5">
-              <span className="text-[10px] text-gray-400 font-medium">Ad Protection</span>
-              <span className="text-xs font-black text-emerald-400 flex items-center gap-1">
-                <ShieldCheck className="w-3.5 h-3.5" /> 100% Ad-Free
-              </span>
-            </div>
-            <div className="p-2.5 rounded-xl bg-black/40 border border-white/5 flex flex-col gap-0.5">
-              <span className="text-[10px] text-gray-400 font-medium">Resolution</span>
-              <span className="text-xs font-black text-sky-400 flex items-center gap-1">
-                <Film className="w-3.5 h-3.5" /> 4K Ultra HD
-              </span>
-            </div>
-            <div className="p-2.5 rounded-xl bg-black/40 border border-white/5 flex flex-col gap-0.5">
-              <span className="text-[10px] text-gray-400 font-medium">Daily Tokens</span>
-              <span className="text-xs font-black text-amber-300 flex items-center gap-1">
-                <Gem className="w-3.5 h-3.5 fill-amber-300" /> Unlimited
-              </span>
-            </div>
-          </div>
-
-          {/* Bottom Card Row: Expiry Status & Loyalty Tier */}
-          <div className="flex items-center justify-between pt-3.5 text-xs relative z-10">
-            <div className="flex items-center gap-2 text-gray-300">
-              <Clock className="w-4 h-4 text-amber-400 shrink-0" />
-              <span>
-                Membership Expiry: <strong className="text-amber-300 font-black">30 Days Active</strong>
-              </span>
-            </div>
-
-            <span className="text-[11px] font-extrabold text-amber-400/90 flex items-center gap-1">
-              <Award className="w-4 h-4 text-amber-400" /> Loyalty Tier: Sovereign Diamond
-            </span>
-          </div>
-        </motion.div>
-      )}
-
       {/* TIER CARDS GRID */}
       <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between px-1">
@@ -452,7 +325,7 @@ export const Premium = () => {
 
                   <div className="mb-3">
                     <span className={`text-2xl font-black ${isActivePlan ? 'text-amber-400' : tone.accentText}`}>
-                      {plan.price}
+                      {plan.priceDisplay}
                     </span>
                     <p className="text-[11px] text-gray-400 font-medium">{plan.duration}</p>
                   </div>
@@ -495,114 +368,18 @@ export const Premium = () => {
         </div>
       </div>
 
-      {/* COLLAPSIBLE COMPARISON SECTION: "Compare Plan" Accordion */}
-      <div className="rounded-3xl border border-white/10 bg-[#090b10]/95 overflow-hidden shadow-xl">
-        <button
-          onClick={() => {
-            triggerHaptic('light');
-            setShowCompareTable(!showCompareTable);
-          }}
-          className="w-full p-4 flex items-center justify-between text-left hover:bg-white/5 transition-colors cursor-pointer"
-        >
-          <div className="flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-amber-400" />
-            <h3 className="text-sm font-extrabold text-white">Compare Royal Privileges</h3>
-          </div>
-
-          <div className="flex items-center gap-2 text-xs font-bold text-gray-400">
-            <span>{showCompareTable ? 'Hide Table' : 'Show Table'}</span>
-            <ChevronDown
-              className={`w-4 h-4 transition-transform duration-300 ${
-                showCompareTable ? 'rotate-180 text-amber-400' : ''
-              }`}
-            />
-          </div>
-        </button>
-
-        {/* Accordion Table Body */}
-        <AnimatePresence>
-          {showCompareTable && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.3 }}
-              className="p-4 border-t border-white/10 overflow-x-auto no-scrollbar"
-            >
-              <table className="w-full text-left text-xs border-collapse min-w-[440px]">
-                <thead>
-                  <tr className="border-b border-white/10 text-gray-400 uppercase text-[10px] tracking-wider">
-                    <th className="py-3 px-3">Privilege</th>
-                    <th className="py-3 px-3">Trial Pass</th>
-                    <th className="py-3 px-3 text-cyan-400">Daily VIP</th>
-                    <th className="py-3 px-3 text-amber-400 font-bold">Royal Sovereign</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-white/5 text-gray-300">
-                  <tr>
-                    <td className="py-3 px-3 font-semibold">HD 4K Streaming</td>
-                    <td className="py-3 px-3 text-emerald-400 font-bold">Unlimited</td>
-                    <td className="py-3 px-3 text-emerald-400 font-bold">Unlimited</td>
-                    <td className="py-3 px-3 text-emerald-400 font-bold">Unlimited</td>
-                  </tr>
-                  <tr>
-                    <td className="py-3 px-3 font-semibold">Download Bandwidth</td>
-                    <td className="py-3 px-3 text-rose-400 font-semibold">Disabled</td>
-                    <td className="py-3 px-3 text-cyan-400 font-medium">5 files / min</td>
-                    <td className="py-3 px-3 text-amber-400 font-bold">10 files / min (Turbo)</td>
-                  </tr>
-                  <tr>
-                    <td className="py-3 px-3 font-semibold">Ad-Free Experience</td>
-                    <td className="py-3 px-3"><X className="w-3.5 h-3.5 text-gray-600" /></td>
-                    <td className="py-3 px-3"><Check className="w-3.5 h-3.5 text-emerald-400" /></td>
-                    <td className="py-3 px-3 text-amber-400 font-bold flex items-center gap-1">100% Ad-Free <Check className="w-3.5 h-3.5" /></td>
-                  </tr>
-                  <tr>
-                    <td className="py-3 px-3 font-semibold">Royal Crown Badge</td>
-                    <td className="py-3 px-3"><X className="w-3.5 h-3.5 text-gray-600" /></td>
-                    <td className="py-3 px-3"><X className="w-3.5 h-3.5 text-gray-600" /></td>
-                    <td className="py-3 px-3 text-amber-400 font-bold flex items-center gap-1">Golden Crown <Check className="w-3.5 h-3.5" /></td>
-                  </tr>
-                  <tr>
-                    <td className="py-3 px-3 font-semibold">Priority 24/7 Support</td>
-                    <td className="py-3 px-3"><X className="w-3.5 h-3.5 text-gray-600" /></td>
-                    <td className="py-3 px-3"><Check className="w-3.5 h-3.5 text-emerald-400" /></td>
-                    <td className="py-3 px-3 text-amber-400 font-bold flex items-center gap-1">Royal Concierge <Check className="w-3.5 h-3.5" /></td>
-                  </tr>
-                </tbody>
-              </table>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-
-      {/* ROYAL GUARANTEE & SECURITY BADGES */}
-      <div className="p-4 rounded-2xl bg-black/40 border border-white/5 flex flex-wrap items-center justify-around gap-4 text-center text-xs text-gray-300">
-        <div className="flex items-center gap-2">
-          <Zap className="w-4 h-4 text-amber-400" />
-          <span className="font-bold">Instant Telegram Activation</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <ShieldCheck className="w-4 h-4 text-emerald-400" />
-          <span className="font-bold">Secured via Telegram Stars & UPI</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <Crown className="w-4 h-4 text-amber-400" />
-          <span className="font-bold">Royal Loyalty Guaranteed</span>
-        </div>
-      </div>
-
-      {/* MODAL 1: Free referral modal */}
+      {/* MODAL 1: Free Referral Key Modal (Dark Obsidian Tone, No Blue) */}
       <ModalShell
         isOpen={showFreeModal}
         onClose={() => setShowFreeModal(false)}
-        title="Activate 1-Hour Free HD Access"
+        title="Activate Free Access Key"
+        className="bg-[#0A0D15]/98 border border-amber-500/30 shadow-[0_12px_45px_rgba(0,0,0,0.85)]"
       >
         <div className="flex flex-col gap-4 text-xs text-gray-200">
           <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center gap-3">
             <Zap className="w-6 h-6 text-amber-400 shrink-0" />
             <p className="leading-snug">
-              Share your personal referral link with a friend. Copying the link will test the callback and immediately unlock 1-Hour Free Access!
+              Share your personal referral link with a friend. Copying the link will test the activation callback and immediately unlock 1-Hour Free Access!
             </p>
           </div>
 
@@ -611,40 +388,34 @@ export const Premium = () => {
               type="text"
               readOnly
               value={userProfile.referralLink}
-              className="flex-1 bg-black/50 border border-white/10 rounded-xl px-3 py-2 text-xs font-mono text-gray-300 focus:outline-none"
+              className="flex-1 bg-black/60 border border-white/10 rounded-xl px-3 py-2 text-xs font-mono text-gray-300 focus:outline-none"
             />
             <button
               onClick={handleCopyLink}
-              className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-950 font-black flex items-center gap-1.5 transition-all cursor-pointer shadow-md"
+              className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-slate-950 font-black flex items-center gap-1.5 transition-all cursor-pointer shadow-md hover:brightness-110"
             >
               {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-              <span>{copied ? 'Copied' : 'Copy & Test'}</span>
+              <span>{copied ? 'Copied' : 'Copy & Activate'}</span>
             </button>
           </div>
 
           <button
             onClick={() => setShowFreeModal(false)}
-            className="w-full py-2.5 rounded-xl bg-white/10 hover:bg-white/20 font-bold text-white transition-colors mt-2 cursor-pointer"
+            className="w-full py-2.5 rounded-xl bg-white/10 hover:bg-white/15 font-bold text-white transition-colors mt-2 cursor-pointer border border-white/10"
           >
             Close
           </button>
         </div>
       </ModalShell>
 
-      {/* MODAL 2: Paid checkout */}
+      {/* MODAL 2: Paid Checkout Flow (Separated UPI and Stars Flows) */}
       <ModalShell
         isOpen={showPayModal}
-        onClose={() => !isProcessing && setShowPayModal(false)}
-        title={`Activate ${selectedPlan?.name || 'Royal VIP'}`}
-        className="bg-gradient-to-b from-[#161a29] via-[#0e121d] to-[#090b12] border border-amber-500/40 shadow-[0_0_60px_rgba(245,158,11,0.25)]"
+        onClose={() => !isProcessingStars && setShowPayModal(false)}
+        title={paySubView === 'stars' ? 'Telegram Stars Invoice' : `VIP Pass Activation`}
+        className="bg-[#0A0D15]/98 border border-amber-500/40 shadow-[0_12px_45px_rgba(0,0,0,0.85)]"
       >
-        {isProcessing ? (
-          <div className="flex flex-col items-center justify-center py-8 gap-3 text-center">
-            <Loader2 className="w-10 h-10 animate-spin text-amber-400" />
-            <h3 className="text-sm font-bold text-white">Verifying Royal VIP Activation</h3>
-            <p className="text-xs text-gray-400">Processing via secure payment gateway...</p>
-          </div>
-        ) : (
+        {paySubView === 'choose' ? (
           <div className="flex flex-col gap-4 text-xs text-gray-200">
             {/* Selected Plan Details Banner */}
             <div className="p-4 rounded-2xl bg-gradient-to-r from-amber-950/40 via-amber-900/20 to-transparent border border-amber-500/30 flex items-center justify-between">
@@ -659,24 +430,21 @@ export const Premium = () => {
                 <span className="text-[10px] text-gray-400">{selectedPlan?.duration}</span>
               </div>
               <div className="text-right">
-                <span className="text-xl font-black bg-gradient-to-r from-amber-300 to-yellow-400 bg-clip-text text-transparent">
-                  {selectedPlan?.price}
-                </span>
-                <span className="block text-[9px] text-emerald-400 font-bold uppercase tracking-wide">
+                <span className="text-xs font-black px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 uppercase tracking-wide">
                   Instant Access
                 </span>
               </div>
             </div>
 
-            <p className="font-bold text-gray-300 tracking-wide text-xs">Choose Your Payment Method</p>
+            <p className="font-bold text-gray-300 tracking-wide text-xs">Choose Payment Method</p>
 
             <div className="grid grid-cols-1 gap-3">
-              {/* Pay with UPI (Opens Dedicated Payment Page) */}
+              {/* Option 1: Pay with UPI (Dedicated Page - ZERO Mention of Stars) */}
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.96 }}
                 onClick={handlePayWithUpi}
-                className="p-3.5 rounded-2xl bg-gradient-to-r from-emerald-950/40 via-[#0e1320] to-[#090d18] border border-emerald-500/40 hover:border-emerald-400 hover:shadow-[0_0_25px_rgba(16,185,129,0.3)] flex items-center justify-between text-left transition-all duration-300 group cursor-pointer shadow-lg"
+                className="p-3.5 rounded-2xl bg-[#0e121d] border border-emerald-500/40 hover:border-emerald-400 hover:shadow-[0_0_25px_rgba(16,185,129,0.25)] flex items-center justify-between text-left transition-all duration-300 group cursor-pointer shadow-lg"
               >
                 <div className="flex items-center gap-3.5">
                   <div className="p-3 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 text-slate-950 shadow-md shadow-emerald-500/30">
@@ -685,24 +453,24 @@ export const Premium = () => {
                   <div>
                     <div className="flex items-center gap-2">
                       <h4 className="font-black text-sm text-white group-hover:text-emerald-300 transition-colors">
-                        Pay with UPI (QR Code)
+                        Pay with UPI Instant ({selectedPlan?.priceUpi})
                       </h4>
                       <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[9px] font-extrabold uppercase tracking-wide border border-emerald-500/30">
                         Instant
                       </span>
                     </div>
-                    <p className="text-[11px] text-gray-400 mt-0.5">GPay, PhonePe, Paytm, BHIM QR</p>
+                    <p className="text-[11px] text-gray-400 mt-0.5">PhonePe, Google Pay, Paytm & BHIM QR</p>
                   </div>
                 </div>
                 <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-emerald-400 group-hover:translate-x-1 transition-all" />
               </motion.button>
 
-              {/* Pay with Telegram Stars */}
+              {/* Option 2: Pay with Telegram Stars (Dedicated Stars Flow - ZERO Mention of UPI) */}
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.96 }}
-                onClick={() => handleConfirmPayment('Stars')}
-                className="p-3.5 rounded-2xl bg-gradient-to-r from-amber-950/40 via-[#0e1320] to-[#090d18] border border-amber-500/40 hover:border-amber-400 hover:shadow-[0_0_25px_rgba(245,158,11,0.3)] flex items-center justify-between text-left transition-all duration-300 group cursor-pointer shadow-lg"
+                onClick={handleOpenStarsFlow}
+                className="p-3.5 rounded-2xl bg-[#0e121d] border border-amber-500/40 hover:border-amber-400 hover:shadow-[0_0_25px_rgba(245,158,11,0.25)] flex items-center justify-between text-left transition-all duration-300 group cursor-pointer shadow-lg"
               >
                 <div className="flex items-center gap-3.5">
                   <div className="p-3 rounded-2xl bg-gradient-to-br from-amber-400 to-yellow-500 text-slate-950 shadow-md shadow-amber-500/30">
@@ -711,21 +479,97 @@ export const Premium = () => {
                   <div>
                     <div className="flex items-center gap-2">
                       <h4 className="font-black text-sm text-white group-hover:text-amber-300 transition-colors">
-                        Pay with Telegram Stars
+                        Pay with Stars ({selectedPlan?.priceStars})
                       </h4>
                       <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[9px] font-extrabold uppercase tracking-wide border border-amber-500/30">
                         Official
                       </span>
                     </div>
-                    <p className="text-[11px] text-gray-400 mt-0.5">Instant one-tap Telegram currency</p>
+                    <p className="text-[11px] text-gray-400 mt-0.5">Instant one-tap Telegram Stars currency</p>
                   </div>
                 </div>
                 <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-amber-400 group-hover:translate-x-1 transition-all" />
               </motion.button>
             </div>
           </div>
+        ) : (
+          /* STARS PAYMENT DEDICATED SCREEN (ZERO MENTION OF UPI) */
+          <div className="flex flex-col gap-4 text-xs text-gray-200">
+            <button
+              onClick={() => setPaySubView('choose')}
+              className="self-start flex items-center gap-1 text-gray-400 hover:text-white transition-colors cursor-pointer text-xs"
+            >
+              <ChevronLeft className="w-4 h-4" />
+              <span>Back to Payment Methods</span>
+            </button>
+
+            {/* Stars Invoice Hero Card */}
+            <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex flex-col items-center text-center gap-2">
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-400 to-yellow-500 flex items-center justify-center text-slate-950 shadow-lg shadow-amber-500/30">
+                <Star className="w-6 h-6 fill-slate-950" />
+              </div>
+
+              <div>
+                <span className="text-[10px] font-black uppercase tracking-widest text-amber-400">
+                  Telegram Bot Invoice
+                </span>
+                <h3 className="text-2xl font-black text-white mt-0.5">
+                  ⭐ {selectedPlan?.priceStars}
+                </h3>
+                <p className="text-xs text-gray-400 mt-0.5">
+                  For {selectedPlan?.name} ({selectedPlan?.duration})
+                </p>
+              </div>
+
+              <div className="w-full mt-2 p-2.5 rounded-xl bg-black/40 border border-white/5 text-[11px] text-gray-300">
+                A Telegram Stars invoice message has been delivered to your chat. Please complete payment and tap <strong>I Have Paid (VIP)</strong> below.
+              </div>
+            </div>
+
+            {/* Actions: Refresh & Cancel */}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleRefreshStars}
+                disabled={isRefreshingStars}
+                className="flex-1 py-2.5 px-3 rounded-xl bg-white/10 hover:bg-white/15 text-white font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer border border-white/10"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 text-amber-400 ${isRefreshingStars ? 'animate-spin' : ''}`} />
+                <span>{isRefreshingStars ? 'Checking...' : 'Refresh'}</span>
+              </button>
+
+              <button
+                onClick={() => setShowPayModal(false)}
+                className="py-2.5 px-4 rounded-xl bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white font-bold transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+            </div>
+
+            {/* ONLY "I Have Paid (VIP)" Button (No Active VIP button) */}
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={handleConfirmStarsPayment}
+              disabled={isProcessingStars}
+              className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-slate-950 font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-amber-500/30 hover:brightness-110 transition-all cursor-pointer mt-1"
+            >
+              {isProcessingStars ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin text-slate-950" />
+                  <span>Verifying Stars Payment...</span>
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 className="w-4 h-4 text-slate-950" />
+                  <span>I Have Paid (VIP)</span>
+                </>
+              )}
+            </motion.button>
+          </div>
         )}
       </ModalShell>
     </div>
   );
 };
+
+export default Premium;

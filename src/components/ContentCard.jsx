@@ -1,13 +1,46 @@
-import React from 'react';
-import { motion } from 'framer-motion';
+import React, { useRef } from 'react';
+import { motion, useScroll, useTransform } from 'framer-motion';
 import { Heart, Share2, Eye, HardDrive } from 'lucide-react';
 import { useAppState } from '../context/AppStateContext';
 import { formatViews, formatFileSize } from '../utils/formatters';
 import { triggerHaptic } from '../utils/telegram';
 
-export const ContentCard = ({ item, onSelectMedia }) => {
+export const ContentCard = ({ item, index = 0, onSelectMedia }) => {
   const { favourites, toggleFavourite } = useAppState();
   const isFavourited = favourites.includes(item.id);
+  const cardRef = useRef(null);
+
+  // Bullet scrolling animation:
+  // When scrolling: container moves from center to left, and below one goes from right to center
+  const { scrollYProgress } = useScroll({
+    target: cardRef,
+    offset: ['start end', 'end start']
+  });
+
+  const isEven = index % 2 === 0;
+
+  // 3D Scrolling Wheel physics:
+  // Cards curve along a 3D cylindrical wheel as they scroll into & out of the viewport
+  const wheelRotateX = useTransform(scrollYProgress, [0, 0.45, 0.75, 1], [14, 0, -10, -18]);
+  const wheelRotateZ = useTransform(
+    scrollYProgress,
+    [0, 0.45, 0.75, 1],
+    isEven ? [-3.5, 0, 2.5, 4] : [3.5, 0, -2.5, -4]
+  );
+  const wheelScale = useTransform(scrollYProgress, [0, 0.45, 0.75, 1], [0.93, 1, 0.98, 0.92]);
+  const wheelOpacity = useTransform(scrollYProgress, [0, 0.15, 0.85, 1], [0.75, 1, 1, 0.7]);
+
+  const containerX = useTransform(
+    scrollYProgress,
+    [0, 0.45, 0.75, 1],
+    isEven ? [15, 0, -18, -28] : [35, 18, 0, -12]
+  );
+
+  const titleX = useTransform(
+    scrollYProgress,
+    [0, 0.45, 0.75, 1],
+    isEven ? [10, 0, -10, -16] : [20, 10, 0, -8]
+  );
 
   const handleFavouriteClick = (e) => {
     e.stopPropagation();
@@ -45,15 +78,20 @@ export const ContentCard = ({ item, onSelectMedia }) => {
 
   return (
     <motion.div
-      layout
-      initial={{ opacity: 0, y: 15 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.95 }}
-      whileHover={{ y: -4, transition: { duration: 0.2 } }}
+      ref={cardRef}
+      style={{
+        transformPerspective: 1200,
+        rotateX: wheelRotateX,
+        rotateZ: wheelRotateZ,
+        scale: wheelScale,
+        opacity: wheelOpacity,
+        x: containerX
+      }}
+      whileHover={{ y: -4, scale: 1.02, rotateZ: 0, transition: { duration: 0.2 } }}
       onClick={handleCardClick}
-      className="group relative flex flex-col glass-panel rounded-3xl overflow-hidden cursor-pointer border border-white/10 hover:border-cyan-500/50 transition-all duration-300 shadow-2xl bg-[#0F172A]/90"
+      className="group relative flex flex-col glass-panel rounded-3xl overflow-hidden cursor-pointer border border-white/10 hover:border-blue-500/40 transition-all duration-300 shadow-2xl bg-[#0A0D15]/90"
     >
-      {/* Premium Thumbnail Container */}
+      {/* Premium Thumbnail Container (Blur effect completely removed for ultra-sharp clarity) */}
       <div className={`relative ${aspectClass} w-full overflow-hidden bg-slate-900/80 rounded-t-3xl`}>
         <img
           src={item.thumbnail}
@@ -62,15 +100,12 @@ export const ContentCard = ({ item, onSelectMedia }) => {
           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
         />
         {/* Multi-layer Vignette */}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0F172A] via-[#0F172A]/30 to-transparent opacity-95" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0A0D15] via-[#0A0D15]/30 to-transparent opacity-95" />
         <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-transparent" />
-        {/* Frosted Edge Blur (left & right) */}
-        <div className="absolute inset-y-0 left-0 w-6 bg-gradient-to-r from-[#0F172A]/60 to-transparent backdrop-blur-[2px]" />
-        <div className="absolute inset-y-0 right-0 w-6 bg-gradient-to-l from-[#0F172A]/60 to-transparent backdrop-blur-[2px]" />
-        {/* Inner Shadow */}
-        <div className="absolute inset-0 shadow-[inset_0_0_30px_rgba(0,0,0,0.5)] pointer-events-none rounded-t-3xl" />
+
         {/* Hover Glow Ring (fades in on hover) */}
-        <div className="absolute inset-0 border-2 border-transparent group-hover:border-cyan-500/40 rounded-t-3xl transition-all duration-500 pointer-events-none group-hover:shadow-[inset_0_0_20px_rgba(6,182,212,0.15)]" />
+        <div className="absolute inset-0 border-2 border-transparent group-hover:border-blue-500/40 rounded-t-3xl transition-all duration-500 pointer-events-none group-hover:shadow-[inset_0_0_20px_rgba(59,130,246,0.2)]" />
+
         {/* Play Button Overlay (video items) */}
         {item.type === 'video' && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300">
@@ -84,22 +119,25 @@ export const ContentCard = ({ item, onSelectMedia }) => {
       </div>
 
       {/* Content Info */}
-      <div className="flex flex-col justify-between flex-1 p-3.5 gap-2">
-        {/* Crisp White Title Text */}
-        <h3 className="text-xs sm:text-sm font-extrabold text-white group-hover:text-cyan-300 leading-snug line-clamp-2 transition-colors">
+      <div className="flex flex-col justify-between flex-1 p-3.5 gap-2 overflow-hidden">
+        {/* Bullet Title Scrolling Motion with Electric Blue Accent on Hover */}
+        <motion.h3
+          style={{ x: titleX }}
+          className="text-xs sm:text-sm font-extrabold text-white group-hover:text-blue-300 leading-snug line-clamp-2 transition-colors"
+        >
           {item.title}
-        </h3>
+        </motion.h3>
 
         {/* Metadata Row: Views & File Size */}
         <div className="flex items-center justify-between pt-1 border-t border-white/10 text-[10px] sm:text-[11px] font-medium text-gray-400">
           <div className="flex items-center gap-2">
-            <span className="flex items-center gap-1">
-              <Eye className="w-3.5 h-3.5 text-blue-400" />
+            <span className="flex items-center gap-1 text-slate-400 font-medium">
+              <Eye className="w-3.5 h-3.5 text-slate-400" />
               {formatViews(item.views)} views
             </span>
             <span className="text-gray-600">•</span>
-            <span className="flex items-center gap-1 text-gray-300 font-semibold">
-              <HardDrive className="w-3.5 h-3.5 text-cyan-400" />
+            <span className="flex items-center gap-1 text-blue-300/90 font-bold">
+              <HardDrive className="w-3.5 h-3.5 text-blue-400" />
               {formatFileSize(item.sizeMB)}
             </span>
           </div>
@@ -129,7 +167,7 @@ export const ContentCard = ({ item, onSelectMedia }) => {
               whileTap={{ scale: 0.85 }}
               onClick={handleShareClick}
               title="Share link"
-              className="p-1.5 rounded-lg text-gray-400 hover:text-cyan-400 hover:bg-cyan-500/15 transition-all duration-200 cursor-pointer flex items-center justify-center"
+              className="p-1.5 rounded-lg text-gray-300 hover:text-blue-400 hover:bg-blue-500/15 border border-transparent hover:border-blue-500/30 transition-all duration-200 cursor-pointer flex items-center justify-center"
             >
               <Share2 className="w-3.5 h-3.5" />
             </motion.button>

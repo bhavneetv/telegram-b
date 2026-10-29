@@ -25,7 +25,9 @@ import {
   Sliders,
   Download,
   CloudDownload,
-  Clock
+  Clock,
+  AlertTriangle,
+  Zap
 } from 'lucide-react';
 import { useAppState } from '../context/AppStateContext';
 import { DUMMY_CONTENT } from '../data/dummyContent';
@@ -34,28 +36,36 @@ import { triggerHaptic } from '../utils/telegram';
 import { AdCard } from '../components/AdCard';
 import { toast } from 'sonner';
 
-// Config for each download stage
+// Config for each download stage (Multi-shade Blue Gradient & Red Fail State)
 const DOWNLOAD_STAGES = {
   checking: {
     label: 'Checking Availability...',
     icon: Clock,
-    progress: 20,
-    gradient: 'linear-gradient(90deg, #334155, #64748b, #1e293b, #334155)',
-    textClass: 'text-gray-200',
+    progress: 25,
+    gradient: 'linear-gradient(90deg, #1e3a8a, #2563eb, #3b82f6, #1e3a8a)',
+    textClass: 'text-white font-bold',
   },
   caching: {
-    label: 'Caching Download Link...',
+    label: 'Caching Fast Cloud Route...',
     icon: CloudDownload,
-    progress: 65,
-    gradient: 'linear-gradient(90deg, #f59e0b, #fde047, #fb923c, #f59e0b)',
-    textClass: 'text-black',
+    progress: 68,
+    gradient: 'linear-gradient(90deg, #1d4ed8, #0ea5e9, #3b82f6, #1d4ed8)',
+    textClass: 'text-white font-black',
   },
   ready: {
     label: 'Download Now',
     icon: Download,
     progress: 100,
-    gradient: 'linear-gradient(90deg, #10b981, #22d3ee, #2dd4bf, #10b981)',
-    textClass: 'text-white',
+    // Dynamic multi-shade blue gradient: Royal blue -> Azure -> Sky blue -> Sapphire -> Cobalt
+    gradient: 'linear-gradient(90deg, #1d4ed8, #2563eb, #38bdf8, #60a5fa, #1d4ed8)',
+    textClass: 'text-white font-black',
+  },
+  failed: {
+    label: 'Download Failed - Tap to Retry',
+    icon: AlertTriangle,
+    progress: 100,
+    gradient: 'linear-gradient(90deg, #991b1b, #dc2626, #ef4444, #991b1b)',
+    textClass: 'text-white font-black',
   },
 };
 
@@ -63,7 +73,14 @@ export const VideoPlayer = () => {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const { favourites, toggleFavourite, isPremium, triggerVideoPlayNotification } = useAppState();
+  const {
+    favourites,
+    toggleFavourite,
+    isPremium,
+    userProfile,
+    showCreditPopup,
+    triggerVideoPlayNotification
+  } = useAppState();
 
   const mediaItem = DUMMY_CONTENT.find((item) => item.id === id) || DUMMY_CONTENT[0];
   const isFavourited = favourites.includes(mediaItem.id);
@@ -388,8 +405,14 @@ export const VideoPlayer = () => {
     if (downloadStage === 'ready') {
       window.open(mediaItem.url, '_blank');
       toast.success(`Downloading ${mediaItem.title}`);
+    } else if (downloadStage === 'failed') {
+      // Retry download
+      setDownloadStage('checking');
+      toast.info('Retrying download link...');
+      setTimeout(() => setDownloadStage('caching'), 1000);
+      setTimeout(() => setDownloadStage('ready'), 2200);
     } else {
-      toast.info(`Preparing link (${downloadStage})...`);
+      toast.info(`Preparing high-speed link (${downloadStage})...`);
     }
   };
 
@@ -456,17 +479,45 @@ export const VideoPlayer = () => {
 
       {/* STICKY TOP VIDEO PLAYER SECTION */}
       <div className={`sticky top-0 z-40 w-full bg-[#030407]/95 backdrop-blur-md shadow-2xl transition-all ${isFullscreen ? 'pt-0 pb-0 px-0' : 'pt-24 sm:pt-28 pb-3 px-2 sm:px-4'}`}>
-        {/* Center Mini Player Header */}
+        {/* Center Mini Player Header with Smooth Credit Deduction Transition */}
         {!isFullscreen && (
-          <div className="flex items-center justify-center relative pb-2 text-center">
-            <div className="flex items-center gap-1.5">
-              <span className="text-sm sm:text-base font-black tracking-tight text-white">
-                Mini Player
-              </span>
-              {isPremium && (
-                <Crown className="w-4 h-4 fill-amber-400 text-amber-400 -rotate-12 shadow-amber-500/50 drop-shadow-md animate-bounce" />
+          <div className="flex items-center justify-center relative pb-2 text-center min-h-[38px]">
+            <AnimatePresence mode="wait">
+              {showCreditPopup ? (
+                <motion.div
+                  key="credit-deducted"
+                  initial={{ opacity: 0, y: -10, scale: 0.94 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 10, scale: 0.94 }}
+                  transition={{ duration: 0.32, ease: 'easeOut' }}
+                  className="flex items-center gap-2 px-3.5 py-1 rounded-full bg-gradient-to-r from-emerald-500/20 via-cyan-500/20 to-blue-500/20 border border-emerald-400/40 text-emerald-300 shadow-[0_0_20px_rgba(16,185,129,0.35)]"
+                >
+                  <Zap className="w-3.5 h-3.5 fill-emerald-400 text-emerald-400 animate-bounce" />
+                  <span className="text-xs font-black tracking-wide text-white">
+                    -1 Credit Deducted
+                  </span>
+                  <span className="px-1.5 py-0.5 rounded bg-emerald-500/20 text-[10px] font-mono font-bold text-emerald-300 border border-emerald-500/30">
+                    {userProfile?.credits}/100 Left
+                  </span>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="mini-player-title"
+                  initial={{ opacity: 0, y: 10, scale: 0.94 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -10, scale: 0.94 }}
+                  transition={{ duration: 0.32, ease: 'easeOut' }}
+                  className="flex items-center gap-1.5"
+                >
+                  <span className="text-sm sm:text-base font-black tracking-tight text-white">
+                    Mini Player
+                  </span>
+                  {isPremium && (
+                    <Crown className="w-4 h-4 fill-blue-400 text-blue-400 -rotate-12 drop-shadow-[0_0_8px_rgba(59,130,246,0.8)] animate-bounce" />
+                  )}
+                </motion.div>
               )}
-            </div>
+            </AnimatePresence>
           </div>
         )}
 
@@ -484,7 +535,7 @@ export const VideoPlayer = () => {
           className={`relative transition-all duration-300 select-none cursor-pointer overflow-hidden border border-neutral-800/80 shadow-[0_12px_45px_rgba(0,0,0,0.95)] ${
             isFullscreen
               ? 'fixed inset-0 z-[9999] w-screen h-screen max-w-none rounded-none bg-black flex flex-col justify-center items-center'
-              : 'max-w-md sm:max-w-lg mx-auto aspect-video w-full bg-black rounded-2xl'
+              : 'max-w-lg sm:max-w-xl mx-auto aspect-video w-full bg-black rounded-2xl'
           }`}
         >
           {/* HTML5 Video Element (Portrait vs Landscape Responsive Sizing) */}
@@ -502,17 +553,20 @@ export const VideoPlayer = () => {
             }`}
           />
 
-          {/* Loading Spinner Overlay */}
+          {/* Loading Spinner Overlay (TeraBox style loader) */}
           <AnimatePresence>
             {isVideoLoading && (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-black/85 backdrop-blur-sm text-amber-400 gap-2"
+                className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-black/85 backdrop-blur-sm gap-2"
               >
-                <Loader2 className="w-8 h-8 animate-spin text-amber-400" />
-                <span className="text-[11px] font-bold text-gray-200">Loading Video...</span>
+                <img
+                  src="/load2.svg"
+                  alt="Loading"
+                  className="w-16 h-16 sm:w-20 sm:h-20 object-contain drop-shadow-[0_0_25px_rgba(255,255,255,0.3)] select-none pointer-events-none"
+                />
               </motion.div>
             )}
           </AnimatePresence>
@@ -852,12 +906,10 @@ export const VideoPlayer = () => {
           <button
             onClick={handleDownloadClick}
             style={{ backgroundImage: stage.gradient }}
-            className={`download-sweep w-full py-2.5 px-4 rounded-xl text-xs font-black flex items-center justify-center gap-2 transition-colors duration-700 ease-in-out cursor-pointer shadow-lg relative overflow-hidden border ${
-              downloadStage === 'checking'
-                ? 'border-gray-600/40'
-                : downloadStage === 'caching'
-                ? 'border-amber-400/50 shadow-amber-500/30'
-                : 'border-emerald-400/40 shadow-emerald-500/30 hover:brightness-110 active:scale-98'
+            className={`download-sweep w-full py-2.5 px-4 rounded-xl text-xs font-black flex items-center justify-center gap-2 transition-all duration-500 cursor-pointer shadow-lg relative overflow-hidden border ${
+              downloadStage === 'failed'
+                ? 'border-red-500/60 shadow-[0_0_20px_rgba(239,68,68,0.45)]'
+                : 'border-blue-400/40 shadow-[0_0_20px_rgba(59,130,246,0.35)] hover:brightness-110 active:scale-98'
             } ${stage.textClass}`}
           >
             <AnimatePresence mode="wait">
@@ -871,8 +923,10 @@ export const VideoPlayer = () => {
               >
                 {downloadStage === 'ready' ? (
                   <StageIcon className="w-4 h-4" />
+                ) : downloadStage === 'failed' ? (
+                  <AlertTriangle className="w-4 h-4 text-white" />
                 ) : (
-                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <Loader2 className="w-4 h-4 animate-spin text-white" />
                 )}
                 <span>
                   {downloadStage === 'ready'
@@ -887,10 +941,46 @@ export const VideoPlayer = () => {
           <div className="w-full h-1 rounded-full bg-white/10 overflow-hidden">
             <motion.div
               className="h-full rounded-full"
-              style={{ backgroundImage: stage.gradient, backgroundSize: '250% 100%' }}
+              style={{ backgroundImage: stage.gradient, backgroundSize: '300% 100%' }}
               animate={{ width: `${stage.progress}%` }}
               transition={{ duration: 0.9, ease: 'easeInOut' }}
             />
+          </div>
+        </motion.div>
+
+        {/* Ad-Free & Watermark-Free VIP Promo Card */}
+        <motion.div
+          whileHover={{ scale: 1.01 }}
+          whileTap={{ scale: 0.98 }}
+          onClick={() => {
+            triggerHaptic('medium');
+            navigate('/premium');
+          }}
+          className="relative overflow-hidden rounded-2xl p-3 sm:p-3.5 bg-gradient-to-r from-blue-950/50 via-indigo-950/60 to-blue-900/50 border border-blue-500/35 hover:border-blue-400/60 transition-all duration-300 shadow-[0_4px_24px_rgba(59,130,246,0.22)] cursor-pointer group"
+        >
+          {/* Ambient top highlight & soft glow */}
+          <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-blue-400/60 to-transparent" />
+          <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full blur-2xl pointer-events-none" />
+
+          <div className="flex items-center justify-between gap-3 relative z-10">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="w-9 h-9 rounded-xl bg-blue-500/20 border border-blue-400/40 flex items-center justify-center shrink-0 shadow-[0_0_12px_rgba(59,130,246,0.35)] group-hover:scale-105 transition-transform">
+                <Crown className="w-4 h-4 text-blue-300 fill-blue-400" />
+              </div>
+              <div className="flex flex-col min-w-0">
+                <span className="text-xs sm:text-sm font-extrabold text-white leading-tight truncate">
+                  Want Ad-Free Playback & Watermark-Free Downloads?
+                </span>
+                <span className="text-[10px] sm:text-[11px] text-blue-300 font-semibold mt-0.5 truncate">
+                  Unlock ultra-fast 4K streaming, zero watermarks & zero popups
+                </span>
+              </div>
+            </div>
+
+            <div className="shrink-0 flex items-center gap-1 text-[10px] sm:text-[11px] font-black text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 px-3 py-1.5 rounded-xl border border-blue-400/40 shadow-md group-hover:brightness-110 transition-all">
+              <span>Click Here</span>
+              <span className="text-blue-200">→</span>
+            </div>
           </div>
         </motion.div>
 
@@ -928,13 +1018,13 @@ export const VideoPlayer = () => {
 
           {/* Media Section: First 4 Cards */}
           {relatedViewMode === 'card' ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+            <div className="grid grid-cols-2 gap-3 sm:gap-4">
               {firstFourRelated.map((item) => (
                 <motion.div
                   key={item.id}
                   whileTap={{ scale: 0.96 }}
                   onClick={() => handleSelectRelatedVideo(item)}
-                  className="rounded-xl overflow-hidden cursor-pointer border border-white/5 hover:border-amber-500/40 transition-all group bg-[#0a0c10]/95 shadow-md"
+                  className="rounded-2xl overflow-hidden cursor-pointer border border-white/10 hover:border-amber-500/40 transition-all group bg-[#0a0c10]/95 shadow-lg"
                 >
                   <div className="aspect-video w-full overflow-hidden bg-slate-900 relative">
                     <img
@@ -943,8 +1033,8 @@ export const VideoPlayer = () => {
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
                   </div>
-                  <div className="p-2 flex flex-col gap-0.5">
-                    <h4 className="text-[11px] font-bold text-white line-clamp-2 leading-snug group-hover:text-amber-300">
+                  <div className="p-2.5 flex flex-col gap-1">
+                    <h4 className="text-xs font-bold text-white line-clamp-2 leading-snug group-hover:text-amber-200">
                       {item.title}
                     </h4>
                   </div>
@@ -952,15 +1042,15 @@ export const VideoPlayer = () => {
               ))}
             </div>
           ) : (
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-2.5">
               {firstFourRelated.map((item) => (
                 <motion.div
                   key={item.id}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => handleSelectRelatedVideo(item)}
-                  className="p-2 rounded-xl overflow-hidden cursor-pointer border border-white/5 hover:border-amber-500/40 transition-all flex items-center gap-2.5 group bg-[#0a0c10]/95 shadow-md"
+                  className="p-2.5 rounded-2xl overflow-hidden cursor-pointer border border-white/10 hover:border-amber-500/40 transition-all flex items-center gap-3 group bg-[#0a0c10]/95 shadow-md"
                 >
-                  <div className="w-24 aspect-video rounded-lg overflow-hidden bg-slate-900 relative shrink-0">
+                  <div className="w-28 sm:w-32 aspect-video rounded-xl overflow-hidden bg-slate-900 relative shrink-0">
                     <img
                       src={item.thumbnail}
                       alt={item.title}
@@ -968,8 +1058,8 @@ export const VideoPlayer = () => {
                     />
                   </div>
 
-                  <div className="flex flex-col justify-center flex-1 gap-0.5 overflow-hidden">
-                    <h4 className="text-[11px] font-bold text-white line-clamp-2 leading-snug group-hover:text-amber-300">
+                  <div className="flex flex-col justify-center flex-1 gap-1 overflow-hidden">
+                    <h4 className="text-xs font-bold text-white line-clamp-2 leading-snug group-hover:text-amber-200">
                       {item.title}
                     </h4>
                   </div>
@@ -986,13 +1076,13 @@ export const VideoPlayer = () => {
           {/* Media Section: Remaining Cards */}
           {remainingRelated.length > 0 && (
             relatedViewMode === 'card' ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+              <div className="grid grid-cols-2 gap-3 sm:gap-4">
                 {remainingRelated.map((item) => (
                   <motion.div
                     key={item.id}
                     whileTap={{ scale: 0.96 }}
                     onClick={() => handleSelectRelatedVideo(item)}
-                    className="rounded-xl overflow-hidden cursor-pointer border border-white/5 hover:border-amber-500/40 transition-all group bg-[#0a0c10]/95 shadow-md"
+                    className="rounded-2xl overflow-hidden cursor-pointer border border-white/10 hover:border-amber-500/40 transition-all group bg-[#0a0c10]/95 shadow-lg"
                   >
                     <div className="aspect-video w-full overflow-hidden bg-slate-900 relative">
                       <img
@@ -1001,8 +1091,8 @@ export const VideoPlayer = () => {
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       />
                     </div>
-                    <div className="p-2 flex flex-col gap-0.5">
-                      <h4 className="text-[11px] font-bold text-white line-clamp-2 leading-snug group-hover:text-amber-300">
+                    <div className="p-2.5 flex flex-col gap-1">
+                      <h4 className="text-xs font-bold text-white line-clamp-2 leading-snug group-hover:text-amber-200">
                         {item.title}
                       </h4>
                     </div>
@@ -1010,15 +1100,15 @@ export const VideoPlayer = () => {
                 ))}
               </div>
             ) : (
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-2.5">
                 {remainingRelated.map((item) => (
                   <motion.div
                     key={item.id}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => handleSelectRelatedVideo(item)}
-                    className="p-2 rounded-xl overflow-hidden cursor-pointer border border-white/5 hover:border-amber-500/40 transition-all flex items-center gap-2.5 group bg-[#0a0c10]/95 shadow-md"
+                    className="p-2.5 rounded-2xl overflow-hidden cursor-pointer border border-white/10 hover:border-amber-500/40 transition-all flex items-center gap-3 group bg-[#0a0c10]/95 shadow-md"
                   >
-                    <div className="w-24 aspect-video rounded-lg overflow-hidden bg-slate-900 relative shrink-0">
+                    <div className="w-28 sm:w-32 aspect-video rounded-xl overflow-hidden bg-slate-900 relative shrink-0">
                       <img
                         src={item.thumbnail}
                         alt={item.title}
@@ -1026,8 +1116,8 @@ export const VideoPlayer = () => {
                       />
                     </div>
 
-                    <div className="flex flex-col justify-center flex-1 gap-0.5 overflow-hidden">
-                      <h4 className="text-[11px] font-bold text-white line-clamp-2 leading-snug group-hover:text-amber-300">
+                    <div className="flex flex-col justify-center flex-1 gap-1 overflow-hidden">
+                      <h4 className="text-xs font-bold text-white line-clamp-2 leading-snug group-hover:text-amber-200">
                         {item.title}
                       </h4>
                     </div>

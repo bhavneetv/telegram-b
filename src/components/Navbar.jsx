@@ -67,8 +67,8 @@ export const Navbar = () => {
         }}
         className={`pointer-events-auto flex items-center justify-around gap-1.5 px-3 glass-panel rounded-full shadow-2xl transition-all duration-300 ${
           isPremium
-            ? 'border-amber-500/60 shadow-amber-500/30 bg-[#0F172A]/95 backdrop-blur-xl'
-            : 'border-white/10 bg-[#0F172A]/90 backdrop-blur-xl'
+            ? 'border-amber-500/60 shadow-amber-500/30 bg-[#0A0D15]/95 backdrop-blur-xl'
+            : 'border-white/10 bg-[#0A0D15]/90 backdrop-blur-xl'
         } ${compact ? 'py-1.5 px-3' : 'py-2 px-4'}`}
       >
         {navItems.map((item) => {
@@ -86,7 +86,7 @@ export const Navbar = () => {
                 isActive
                   ? item.isSpecial
                     ? 'bg-gradient-to-r from-amber-500 to-yellow-500 text-black font-extrabold shadow-lg shadow-amber-500/30'
-                    : 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 shadow-lg shadow-cyan-500/20 font-bold'
+                    : 'bg-white/15 text-white border border-white/20 shadow-lg font-bold'
                   : item.isSpecial
                   ? 'text-amber-400 hover:text-amber-300 font-semibold'
                   : 'text-gray-400 hover:text-white font-medium'
@@ -105,7 +105,7 @@ export const Navbar = () => {
                   isActive
                     ? item.isSpecial
                       ? 'stroke-[2.5] text-black fill-none'
-                      : 'stroke-[2.5] text-cyan-300 fill-none'
+                      : 'stroke-[2.5] text-white fill-none'
                     : item.isSpecial
                     ? 'stroke-[2] text-amber-400 fill-none'
                     : 'stroke-[2] text-gray-400 fill-none'

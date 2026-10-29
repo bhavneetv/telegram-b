@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { RefreshCw, Heart, Crown, Sparkles, FilterX, Loader2, ArrowDown, Film, Zap, Infinity, AlertTriangle } from 'lucide-react';
+import { RefreshCw, Heart, Crown, Sparkles, FilterX, Loader2, ArrowDown, Film, Zap, Infinity, AlertTriangle, Rocket, Shield } from 'lucide-react';
 import { SearchBar } from '../components/SearchBar';
 import { ContentCard } from '../components/ContentCard';
 import { AdCard } from '../components/AdCard';
@@ -28,54 +28,41 @@ export const Explorer = () => {
   const [contentList, setContentList] = useState(DUMMY_CONTENT);
   const [selectedMedia, setSelectedMedia] = useState(null);
 
-  // Typewriter Headline Above Search Bar (Modern High-Impact Phrases)
+  // Dynamic Live Stream Radar Rotating Headlines
   const headlinePhrases = [
-    { prefix: '⚡ Stream & Play ', highlight: 'Ultra HD 4K Cloud Media' },
-    { prefix: '🚀 Blazing Fast ', highlight: 'Direct High-Speed Downloads' },
-    { prefix: '🔒 Private & Secure ', highlight: 'Telegram Cloud Vault' },
-    { prefix: '✨ VIP Experience ', highlight: 'Zero Buffer & Instant Access' }
+    {
+      icon: Zap,
+      prefix: 'Stream & Play',
+      highlight: 'Ultra HD 4K Cloud Media',
+      tag: 'FAST CLOUD'
+    },
+    {
+      icon: Rocket,
+      prefix: 'Blazing Fast',
+      highlight: 'Direct High-Speed Downloads',
+      tag: 'MAX TURBO'
+    },
+    {
+      icon: Shield,
+      prefix: 'Private & Secure',
+      highlight: 'Telegram Cloud Vault',
+      tag: 'ENCRYPTED'
+    },
+    {
+      icon: Crown,
+      prefix: 'VIP Experience',
+      highlight: 'Zero Buffering & Instant Play',
+      tag: 'ROYAL VIP'
+    }
   ];
-  const [prefixText, setPrefixText] = useState('');
-  const [highlightText, setHighlightText] = useState('');
   const [phraseIdx, setPhraseIdx] = useState(0);
-  const [isDeletingHeadline, setIsDeletingHeadline] = useState(false);
 
   useEffect(() => {
-    const current = headlinePhrases[phraseIdx];
-    const fullText = current.prefix + current.highlight;
-    const speed = isDeletingHeadline ? 30 : 60;
-
-    const timer = setTimeout(() => {
-      if (!isDeletingHeadline) {
-        const nextLen = prefixText.length + highlightText.length + 1;
-        if (nextLen <= current.prefix.length) {
-          setPrefixText(current.prefix.substring(0, nextLen));
-        } else {
-          setPrefixText(current.prefix);
-          setHighlightText(current.highlight.substring(0, nextLen - current.prefix.length));
-        }
-
-        if (nextLen >= fullText.length) {
-          setTimeout(() => setIsDeletingHeadline(true), 2000);
-        }
-      } else {
-        const totalLen = prefixText.length + highlightText.length - 1;
-        if (totalLen < 0) {
-          setIsDeletingHeadline(false);
-          setPrefixText('');
-          setHighlightText('');
-          setPhraseIdx((prev) => (prev + 1) % headlinePhrases.length);
-        } else if (totalLen >= current.prefix.length) {
-          setHighlightText(current.highlight.substring(0, totalLen - current.prefix.length));
-        } else {
-          setHighlightText('');
-          setPrefixText(current.prefix.substring(0, totalLen));
-        }
-      }
-    }, speed);
-
-    return () => clearTimeout(timer);
-  }, [prefixText, highlightText, isDeletingHeadline, phraseIdx]);
+    const timer = setInterval(() => {
+      setPhraseIdx((prev) => (prev + 1) % headlinePhrases.length);
+    }, 3200);
+    return () => clearInterval(timer);
+  }, [headlinePhrases.length]);
 
   // Pull-To-Refresh State
   const [pullDistance, setPullDistance] = useState(0);
@@ -173,7 +160,7 @@ export const Explorer = () => {
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
-      className="flex flex-col gap-3.5 pb-24 px-4 max-w-6xl mx-auto pt-[53px] relative"
+      className="flex flex-col gap-3.5 pb-24 px-4 max-w-6xl mx-auto pt-[53px] relative overflow-x-hidden"
     >
       {/* Pull To Refresh Indicator */}
       <AnimatePresence>
@@ -214,48 +201,76 @@ export const Explorer = () => {
           <div className="relative flex flex-col items-center">
             {/* Tilted Crown ABOVE "MINI" text if Premium */}
             {isPremium && (
-              <Crown className="w-4 h-4 fill-amber-400 text-amber-400 -rotate-12 absolute -top-3.5 shadow-amber-500/50 drop-shadow-md animate-bounce" />
+              <Crown className="w-4 h-4 fill-blue-400 text-blue-400 -rotate-12 absolute -top-3.5 drop-shadow-[0_0_10px_rgba(59,130,246,0.8)] animate-bounce" />
             )}
-            <span className="px-2 py-0.5 rounded-lg bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 text-[10px] font-black uppercase tracking-widest shadow-sm mt-0.5">
+            <span className="px-2 py-0.5 rounded-lg bg-blue-500/15 text-blue-300 border border-blue-500/30 text-[10px] font-black uppercase tracking-widest shadow-[0_0_12px_rgba(59,130,246,0.25)] mt-0.5">
               MINI
             </span>
           </div>
         </div>
       </div>
 
-      {/* Futuristic Cyber Typewriter Marquee Banner */}
-      <div className="relative overflow-hidden rounded-2xl border border-cyan-500/25 bg-gradient-to-r from-[#0c1424]/95 via-[#0e1933]/90 to-[#0c1424]/95 p-3 shadow-xl shadow-cyan-950/40 backdrop-blur-xl">
-        {/* Ambient Top Glow Line */}
-        <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-cyan-400/60 to-transparent" />
+      {/* Luxury Cloud Stream Radar Live Banner (Electric Blue Theme) */}
+      <div className="relative overflow-hidden rounded-2xl glass-search p-3 sm:p-3.5 border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.5),inset_0_1px_1px_rgba(255,255,255,0.18)] transition-all duration-300 hover:border-blue-500/40 group">
+        {/* Specular Top Chamfer Glow in Sapphire Blue */}
+        <div className="absolute top-0 inset-x-0 h-[1.5px] bg-gradient-to-r from-transparent via-blue-400/80 to-transparent" />
+        <div className="absolute -top-10 -right-10 w-36 h-28 bg-blue-500/15 rounded-full blur-2xl pointer-events-none" />
 
-        {/* Top Header Row of Ticker */}
-        <div className="flex items-center justify-between pb-1.5 border-b border-white/5 text-[9px] font-black uppercase tracking-widest">
-          <div className="flex items-center gap-1.5 text-cyan-400">
+        {/* Top Header Status Row */}
+        <div className="flex items-center justify-between pb-2 text-[9.5px] font-black uppercase tracking-widest">
+          <div className="flex items-center gap-2">
             <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-500" />
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.9)]" />
             </span>
-            <span className="text-cyan-300 font-bold">Cloud Stream Radar</span>
+            <span className="text-gray-300 font-extrabold tracking-wider text-[10px]">Cloud Stream Radar</span>
+            <span className="hidden sm:inline-block px-2 py-0.5 rounded-full bg-white/5 text-gray-400 text-[8.5px] font-semibold border border-white/10">
+              Live Network
+            </span>
           </div>
 
-          <div className="flex items-center gap-1 text-[8px] font-extrabold text-amber-400/90 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">
-            <Sparkles className="w-2.5 h-2.5 text-amber-400" />
-            <span>4K HDR Ready</span>
+          <div className="flex items-center gap-1.5 text-[8.5px] font-black text-blue-300 bg-blue-500/15 px-2.5 py-0.5 rounded-full border border-blue-400/30 shadow-[0_0_12px_rgba(59,130,246,0.3)]">
+            <Sparkles className="w-2.5 h-2.5 text-blue-400 fill-blue-400" />
+            <span>4K HDR READY</span>
           </div>
         </div>
 
-        {/* Dynamic Typewriter Text Area */}
-        <div className="flex items-center pt-2 min-h-[34px] sm:min-h-[38px] overflow-hidden">
-          <div className="flex items-center flex-wrap gap-x-1.5 leading-snug">
-            <span className="text-white font-extrabold text-xs sm:text-sm tracking-tight drop-shadow-sm">
-              {prefixText}
-            </span>
-            <span className="bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500 bg-clip-text text-transparent font-black text-xs sm:text-sm tracking-tight drop-shadow-[0_0_12px_rgba(245,158,11,0.5)]">
-              {highlightText}
-            </span>
-            {/* Blinking Cyber Cursor */}
-            <span className="inline-block w-1 h-4 sm:h-4.5 rounded-full bg-gradient-to-b from-cyan-400 to-amber-400 shadow-[0_0_8px_rgba(34,211,238,0.9)] ml-0.5 align-middle animate-pulse" />
-          </div>
+        {/* Dynamic Highlight Row with Silky Smooth Slide Transition */}
+        <div className="relative flex items-center min-h-[38px] bg-black/35 rounded-xl px-2.5 py-1.5 border border-white/5 overflow-hidden">
+          <AnimatePresence mode="wait">
+            {(() => {
+              const current = headlinePhrases[phraseIdx];
+              const CurrentIcon = current.icon;
+              return (
+                <motion.div
+                  key={phraseIdx}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 0.32, ease: 'easeOut' }}
+                  className="flex items-center justify-between w-full gap-2"
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <div className="p-1 rounded-lg bg-blue-500/15 border border-blue-500/30 text-blue-400 shrink-0 shadow-[0_0_10px_rgba(59,130,246,0.3)]">
+                      <CurrentIcon className="w-3.5 h-3.5" />
+                    </div>
+                    <div className="flex items-center flex-wrap gap-x-1.5 text-xs sm:text-sm truncate">
+                      <span className="font-extrabold text-white tracking-tight">
+                        {current.prefix}
+                      </span>
+                      <span className="font-black bg-gradient-to-r from-blue-400 via-sky-300 to-indigo-400 bg-clip-text text-transparent tracking-tight drop-shadow-[0_0_12px_rgba(59,130,246,0.5)]">
+                        {current.highlight}
+                      </span>
+                    </div>
+                  </div>
+
+                  <span className="hidden xs:flex items-center text-[8px] font-black text-blue-300 bg-blue-500/15 px-2 py-0.5 rounded-md border border-blue-500/25 uppercase tracking-widest shrink-0">
+                    {current.tag}
+                  </span>
+                </motion.div>
+              );
+            })()}
+          </AnimatePresence>
         </div>
       </div>
 
@@ -268,39 +283,51 @@ export const Explorer = () => {
       {/* Separated Media Count & Credits Row - Distinct Cards */}
       <div className="flex items-center justify-between gap-2.5 pt-1.5">
         {/* Total Media Pill */}
-        <div className="flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-[#0F172A]/90 border border-white/10 text-xs font-semibold text-gray-300 shadow-md backdrop-blur-md">
-          <Film className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+        <div className="flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-[#0A0D15]/90 border border-white/10 text-xs font-semibold text-gray-300 shadow-md backdrop-blur-md">
+          <Film className="w-3.5 h-3.5 text-blue-400 shrink-0" />
           <span>
             Total Media: <strong className="text-white font-bold">{filteredContent.length}</strong> items
           </span>
         </div>
 
-        {/* Dynamic Credits Pill */}
+        {/* Dynamic Credits Pill (Green first -> Yellow -> Red) */}
         {isReferralPlan ? (
           <div className={`relative px-3.5 py-2 rounded-2xl text-xs font-black transition-all ${timerStyle.border} ${timerStyle.bg} ${timerStyle.text} flex items-center gap-1.5 shadow-md backdrop-blur-md`}>
             <Infinity className="w-4 h-4 stroke-[2.5]" />
             <span>Credits</span>
           </div>
         ) : isPremium ? (
-          <div className="flex items-center gap-1.5 px-3.5 py-2 rounded-2xl bg-amber-500/10 text-amber-400 border border-amber-500/40 text-xs font-black shadow-md backdrop-blur-md">
+          <div className="flex items-center gap-1.5 px-3.5 py-2 rounded-2xl bg-blue-500/15 text-blue-300 border border-blue-500/40 text-xs font-black shadow-[0_0_15px_rgba(59,130,246,0.25)] backdrop-blur-md">
             <Infinity className="w-4 h-4 stroke-[2.5]" />
             <span>Unlimited Credits</span>
           </div>
         ) : (
-          <div
-            className={`flex items-center gap-2 px-3.5 py-2 rounded-2xl text-xs font-black shadow-md backdrop-blur-md transition-all ${
-              (userProfile?.credits ?? 0) <= 20
-                ? 'bg-rose-500/20 text-rose-300 border border-rose-500/50 shadow-[0_0_15px_rgba(244,63,94,0.4)] animate-pulse'
-                : 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/30'
-            }`}
-          >
-            {(userProfile?.credits ?? 0) <= 20 ? (
-              <AlertTriangle className="w-3.5 h-3.5 text-rose-400" />
-            ) : (
-              <Zap className="w-3.5 h-3.5 fill-cyan-400" />
-            )}
-            <span>{(userProfile?.credits ?? 0)}/100 Credits</span>
-          </div>
+          (() => {
+            const credits = userProfile?.credits ?? 0;
+            const isRed = credits <= 20;
+            const isYellow = credits > 20 && credits <= 50;
+            // Green is credits > 50
+            return (
+              <div
+                className={`flex items-center gap-2 px-3.5 py-2 rounded-2xl text-xs font-black shadow-md backdrop-blur-md transition-all ${
+                  isRed
+                    ? 'bg-rose-500/20 text-rose-300 border border-rose-500/50 shadow-[0_0_15px_rgba(244,63,94,0.4)] animate-pulse'
+                    : isYellow
+                    ? 'bg-amber-500/15 text-amber-300 border border-amber-500/40 shadow-[0_0_12px_rgba(245,158,11,0.2)]'
+                    : 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/40 shadow-[0_0_12px_rgba(16,185,129,0.2)]'
+                }`}
+              >
+                {isRed ? (
+                  <AlertTriangle className="w-3.5 h-3.5 text-rose-400 shrink-0" />
+                ) : isYellow ? (
+                  <Zap className="w-3.5 h-3.5 fill-amber-400 text-amber-400 shrink-0" />
+                ) : (
+                  <Zap className="w-3.5 h-3.5 fill-emerald-400 text-emerald-400 shrink-0" />
+                )}
+                <span>{credits}/100 Credits</span>
+              </div>
+            );
+          })()
         )}
       </div>
 
@@ -422,6 +449,7 @@ export const Explorer = () => {
                 <ContentCard
                   key={item.id}
                   item={item}
+                  index={index}
                   onSelectMedia={setSelectedMedia}
                 />
               );

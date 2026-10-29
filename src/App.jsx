@@ -9,6 +9,7 @@ import { Navbar } from './components/Navbar';
 import { ScrollToTopButton } from './components/ScrollToTopButton';
 import { CreditDeductionPopup } from './components/CreditDeductionPopup';
 import { SplashScreen } from './components/SplashScreen';
+import { SubscriptionSuccessModal } from './components/SubscriptionSuccessModal';
 
 import { Explorer } from './pages/Explorer';
 import { Profile } from './pages/Profile';
@@ -19,6 +20,13 @@ import { UpiPayment } from './pages/UpiPayment';
 // Popup Container Inner Wrapper
 const CreditPopupWrapper = () => {
   const { showCreditPopup, setShowCreditPopup } = useAppState();
+  const location = useLocation();
+
+  // If on player page, credit cut animation is shown directly inside the Mini Player header!
+  if (location.pathname.startsWith('/player/')) {
+    return null;
+  }
+
   return (
     <CreditDeductionPopup
       isVisible={showCreditPopup}
@@ -75,8 +83,8 @@ class ErrorBoundary extends React.Component {
             </svg>
           </div>
           <h2 className="text-xl font-bold mb-2">Something went wrong</h2>
-          <p className="text-sm text-gray-400 max-w-sm mb-6">
-            An unexpected glitch occurred. Don't worry, your data and credits are safe.
+          <p className="text-sm text-gray-400 max-w-sm mb-6 font-mono text-xs">
+            {this.state.error?.message || "An unexpected glitch occurred. Don't worry, your data and credits are safe."}
           </p>
           <button
             onClick={() => window.location.reload()}
@@ -112,6 +120,7 @@ export function App() {
         {/* Main App Layout */}
         <BrowserRouter>
           <CreditPopupWrapper />
+          <SubscriptionSuccessModal />
           <div className="min-h-screen bg-[#070A12] text-white flex flex-col relative selection:bg-cyan-500/30">
             <AnimatedRoutes />
             <ScrollToTopButton />

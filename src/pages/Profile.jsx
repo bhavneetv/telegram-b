@@ -99,10 +99,10 @@ export const Profile = () => {
       <motion.div
         initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
-        className="glass-panel p-6 rounded-3xl border border-white/10 flex flex-col items-center justify-center text-center bg-[#0B132B]/90 shadow-2xl relative overflow-hidden"
+        className="glass-panel p-6 rounded-3xl border border-white/10 flex flex-col items-center justify-center text-center bg-[#0A0D15]/95 shadow-2xl relative overflow-hidden"
       >
         <div className="relative mb-3">
-          <div className="w-20 h-20 rounded-full bg-gradient-to-br from-cyan-500 via-blue-600 to-indigo-700 flex items-center justify-center text-2xl font-black text-white ring-4 ring-cyan-500/40 shadow-[0_0_30px_rgba(6,182,212,0.5)] uppercase">
+          <div className="w-20 h-20 rounded-full bg-gradient-to-br from-amber-400 via-yellow-500 to-amber-600 flex items-center justify-center text-2xl font-black text-slate-950 ring-4 ring-amber-500/30 shadow-[0_0_30px_rgba(245,158,11,0.35)] uppercase">
             {userProfile.username.substring(0, 2)}
           </div>
           {isPremium && (
@@ -123,8 +123,8 @@ export const Profile = () => {
               Golden VIP Member
             </span>
           ) : (
-            <span className="px-3.5 py-1 rounded-full bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 text-xs font-bold flex items-center gap-1.5 shadow-sm">
-              <ShieldCheck className="w-3.5 h-3.5 text-cyan-400" />
+            <span className="px-3.5 py-1 rounded-full bg-white/10 text-gray-300 border border-white/15 text-xs font-bold flex items-center gap-1.5 shadow-sm">
+              <ShieldCheck className="w-3.5 h-3.5 text-gray-400" />
               Free Plan Member
             </span>
           )}
@@ -136,7 +136,7 @@ export const Profile = () => {
         {/* Card 1: REFERRALS */}
         <motion.div
           whileHover={{ y: -2 }}
-          className="glass-panel p-3.5 rounded-2xl border border-white/10 flex flex-col items-center justify-center text-center bg-[#0F172A]/90 shadow-md"
+          className="glass-panel p-3.5 rounded-2xl border border-white/10 flex flex-col items-center justify-center text-center bg-[#0A0D15]/90 shadow-md"
         >
           <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">
             REFERRALS
@@ -159,13 +159,13 @@ export const Profile = () => {
           className={`glass-panel p-3.5 rounded-2xl flex flex-col items-center justify-center text-center cursor-pointer transition-all shadow-md ${
             isPremium
               ? 'border border-amber-500/60 bg-amber-950/30'
-              : 'border border-cyan-500/40 bg-cyan-950/20 hover:border-cyan-500'
+              : 'border border-white/10 bg-[#0A0D15]/90 hover:border-amber-500/40'
           }`}
         >
           <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">
             PLAN
           </span>
-          <span className={`text-sm font-black ${isPremium ? 'text-amber-400' : 'text-cyan-400'}`}>
+          <span className={`text-sm font-black ${isPremium ? 'text-amber-400' : 'text-gray-200'}`}>
             {currentPlan}
           </span>
         </motion.div>
@@ -176,7 +176,7 @@ export const Profile = () => {
           className={`glass-panel p-3.5 rounded-2xl border flex flex-col items-center justify-center text-center shadow-md transition-all ${
             !isReferralPlan && !isPremium && userProfile.credits <= 20
               ? 'bg-[#180a0f]/90 border-rose-500/50 shadow-[0_0_15px_rgba(244,63,94,0.25)]'
-              : 'border-white/10 bg-[#0F172A]/90'
+              : 'border-white/10 bg-[#0A0D15]/90'
           }`}
         >
           <span
@@ -204,7 +204,9 @@ export const Profile = () => {
                 className={`text-sm font-black ${
                   userProfile.credits <= 20
                     ? 'text-rose-400 drop-shadow-[0_0_8px_rgba(244,63,94,0.6)]'
-                    : 'text-cyan-400'
+                    : userProfile.credits > 50
+                    ? 'text-emerald-400'
+                    : 'text-amber-400'
                 }`}
               >
                 {userProfile.credits}/100
@@ -222,11 +224,11 @@ export const Profile = () => {
       </div>
 
       {/* 3. YOUR REFERRAL LINK BOX */}
-      <div className="glass-panel p-4 rounded-3xl border border-white/10 flex flex-col gap-3 bg-[#0F172A]/90 shadow-lg">
+      <div className="glass-panel p-4 rounded-3xl border border-white/10 flex flex-col gap-3 bg-[#0A0D15]/90 shadow-lg">
         <div className="flex items-center justify-between">
           <span className="text-xs font-black text-white">Your Referral Link</span>
-          <span className="px-2.5 py-0.5 rounded-full bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 text-[10px] font-bold flex items-center gap-1">
-            <Zap className="w-3 h-3 text-cyan-400 fill-cyan-400" />
+          <span className="px-2.5 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30 text-[10px] font-bold flex items-center gap-1">
+            <Zap className="w-3 h-3 text-amber-400 fill-amber-400" />
             10 Credits / Ref
           </span>
         </div>
@@ -241,7 +243,7 @@ export const Profile = () => {
 
           <button
             onClick={handleCopyLink}
-            className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:brightness-110 active:scale-95 text-white font-black text-xs flex items-center gap-1.5 transition-all shadow-lg shadow-cyan-500/30 cursor-pointer shrink-0"
+            className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:brightness-110 active:scale-95 text-black font-black text-xs flex items-center gap-1.5 transition-all shadow-lg shadow-amber-500/30 cursor-pointer shrink-0"
           >
             {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
             <span>{copied ? 'Copied' : 'Copy'}</span>
@@ -258,7 +260,7 @@ export const Profile = () => {
       </div>
 
       {/* 4. SAVED FAVOURITES ROW (Arrow opens Explorer page with Favourites filter active) */}
-      <div className="glass-panel p-3.5 rounded-3xl border border-white/10 bg-[#0F172A]/90 flex items-center justify-between shadow-lg">
+      <div className="glass-panel p-3.5 rounded-3xl border border-white/10 bg-[#0A0D15]/90 flex items-center justify-between shadow-lg">
         <div className="flex items-center gap-3">
           <div className="p-3 rounded-full bg-rose-500/20 text-rose-500 border border-rose-500/30">
             <Heart className="w-5 h-5 fill-rose-500" />
@@ -282,7 +284,7 @@ export const Profile = () => {
 
           <button
             onClick={handleArrowFavClick}
-            className="p-2 rounded-full bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 hover:bg-cyan-500/30 transition-all cursor-pointer flex items-center justify-center"
+            className="p-2 rounded-full bg-white/10 text-gray-300 border border-white/10 hover:text-white hover:bg-white/20 transition-all cursor-pointer flex items-center justify-center"
             title="View Favourites in Explorer"
           >
             <ChevronRight className="w-4 h-4" />
@@ -298,7 +300,7 @@ export const Profile = () => {
             triggerHaptic('light');
             setShowBugModal(true);
           }}
-          className="glass-panel p-3.5 rounded-3xl border border-white/10 bg-[#0F172A]/90 hover:bg-white/5 transition-all flex items-center gap-3 text-left cursor-pointer shadow-md"
+          className="glass-panel p-3.5 rounded-3xl border border-white/10 bg-[#0A0D15]/90 hover:bg-white/5 transition-all flex items-center gap-3 text-left cursor-pointer shadow-md"
         >
           <div className="p-2.5 rounded-2xl bg-amber-500/10 text-amber-400 border border-amber-500/20">
             <Bug className="w-4 h-4" />
@@ -315,7 +317,7 @@ export const Profile = () => {
             triggerHaptic('light');
             setShowTermsModal(true);
           }}
-          className="glass-panel p-3.5 rounded-3xl border border-white/10 bg-[#0F172A]/90 hover:bg-white/5 transition-all flex items-center gap-3 text-left cursor-pointer shadow-md"
+          className="glass-panel p-3.5 rounded-3xl border border-white/10 bg-[#0A0D15]/90 hover:bg-white/5 transition-all flex items-center gap-3 text-left cursor-pointer shadow-md"
         >
           <div className="p-2.5 rounded-2xl bg-purple-500/10 text-purple-400 border border-purple-500/20">
             <FileText className="w-4 h-4" />
@@ -327,95 +329,113 @@ export const Profile = () => {
         </button>
       </div>
 
-      {/* 6. GO PREMIUM BANNER */}
-      <div className="glass-panel p-4 rounded-3xl border border-amber-500/40 bg-gradient-to-r from-amber-950/40 via-yellow-950/20 to-transparent flex items-center justify-between shadow-2xl shadow-amber-500/15">
-        <div className="flex flex-col gap-1 pr-2">
-          <div className="flex items-center gap-1.5 text-[11px] font-black text-amber-400 uppercase tracking-wider">
-            <Crown className="w-4 h-4 fill-amber-400 text-amber-400" />
-            <span>GO PREMIUM</span>
+      {/* 6. GO PREMIUM BANNER (Only shown for non-premium free users) */}
+      {!isPremium && (
+        <div className="glass-panel p-4 rounded-3xl border border-amber-500/40 bg-gradient-to-r from-amber-950/40 via-yellow-950/20 to-transparent flex items-center justify-between shadow-2xl shadow-amber-500/15">
+          <div className="flex flex-col gap-1 pr-2">
+            <div className="flex items-center gap-1.5 text-[11px] font-black text-amber-400 uppercase tracking-wider">
+              <Crown className="w-4 h-4 fill-amber-400 text-amber-400" />
+              <span>GO PREMIUM</span>
+            </div>
+
+            <h2 className="text-xs sm:text-sm font-black text-white leading-snug">
+              Unlock 10× Fast Downloads & No Limits
+            </h2>
+
+            <p className="text-[10px] text-gray-400 font-medium">
+              Starting at ₹10
+            </p>
           </div>
 
-          <h2 className="text-xs sm:text-sm font-black text-white leading-snug">
-            Unlock 10× Fast Downloads & No Limits
-          </h2>
-
-          <p className="text-[10px] text-gray-400 font-medium">
-            Starting at ₹10 / 10 Stars
-          </p>
+          <motion.button
+            whileTap={{ scale: 0.95 }}
+            onClick={() => {
+              triggerHaptic('medium');
+              navigate('/premium');
+            }}
+            className="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-amber-500 to-yellow-500 hover:brightness-110 text-black font-black text-xs transition-all shadow-lg shadow-amber-500/40 cursor-pointer shrink-0"
+          >
+            Upgrade
+          </motion.button>
         </div>
+      )}
 
-        <motion.button
-          whileTap={{ scale: 0.95 }}
-          onClick={() => {
-            triggerHaptic('medium');
-            navigate('/premium');
-          }}
-          className="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-amber-500 to-yellow-500 hover:brightness-110 text-black font-black text-xs transition-all shadow-lg shadow-amber-500/40 cursor-pointer shrink-0"
-        >
-          Upgrade
-        </motion.button>
-      </div>
-
-      {/* MODAL 1: Manage Favourites (UNIFORM ASPECT-VIDEO THUMBNAILS FOR ALL FORMATS) */}
+      {/* MODAL 1: Manage Favourites (THUMBNAIL-ONLY GRID DESIGN) */}
       <ModalShell
         isOpen={showFavModal}
         onClose={() => setShowFavModal(false)}
-        title="Manage Saved Favourites"
+        title="Saved Favourites"
       >
         {favourites.length === 0 ? (
-          <p className="text-xs text-gray-400 text-center py-6">No saved favourites yet.</p>
+          <div className="text-center py-8 flex flex-col items-center gap-2">
+            <Heart className="w-8 h-8 text-gray-600" />
+            <p className="text-xs text-gray-400">No saved favourites yet.</p>
+          </div>
         ) : (
-          <div className="flex flex-col gap-2.5">
-            <div className="flex justify-end pb-2 border-b border-white/10">
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center justify-between pb-2 border-b border-white/10">
+              <span className="text-xs text-gray-400 font-medium">
+                {favourites.length} {favourites.length === 1 ? 'item' : 'items'} saved
+              </span>
               <button
                 onClick={clearAllFavourites}
-                className="text-xs text-rose-400 hover:text-rose-300 flex items-center gap-1 font-semibold cursor-pointer"
+                className="text-xs text-rose-400 hover:text-rose-300 flex items-center gap-1 font-semibold cursor-pointer transition-colors"
               >
                 <Trash2 className="w-3.5 h-3.5" />
                 Clear All
               </button>
             </div>
 
-            {favourites.map((favId) => {
-              const item = DUMMY_CONTENT.find((c) => c.id === favId);
-              if (!item) return null;
-              return (
-                <div
-                  key={favId}
-                  onClick={() => {
-                    triggerHaptic('light');
-                    setShowFavModal(false);
-                    setSelectedMedia(item);
-                  }}
-                  className="flex items-center justify-between p-2 rounded-2xl bg-white/5 border border-white/10 hover:border-cyan-500/40 cursor-pointer transition-all group"
-                >
-                  {/* Uniform 16:9 Aspect Video Thumbnail for Portrait & Landscape */}
-                  <div className="flex items-center gap-3 overflow-hidden">
-                    <div className="w-28 sm:w-32 aspect-video rounded-xl overflow-hidden bg-slate-900 shrink-0 relative">
-                      <img
-                        src={item.thumbnail}
-                        alt={item.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
+            {/* Pure Thumbnail Grid (Visual-first layout, no captions or text) */}
+            <div className="grid grid-cols-2 gap-3 max-h-[60vh] overflow-y-auto no-scrollbar pr-0.5">
+              {favourites.map((favId) => {
+                const item = DUMMY_CONTENT.find((c) => c.id === favId);
+                if (!item) return null;
+                return (
+                  <motion.div
+                    key={favId}
+                    whileTap={{ scale: 0.96 }}
+                    onClick={() => {
+                      triggerHaptic('light');
+                      setShowFavModal(false);
+                      setSelectedMedia(item);
+                    }}
+                    className="relative aspect-video rounded-2xl overflow-hidden cursor-pointer border border-white/10 hover:border-amber-400/60 transition-all duration-300 group shadow-lg bg-slate-900"
+                  >
+                    <img
+                      src={item.thumbnail}
+                      alt=""
+                      className="w-full h-full object-cover group-hover:scale-108 transition-transform duration-500 ease-out"
+                    />
+
+                    {/* Gradient overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-80 group-hover:opacity-40 transition-opacity" />
+
+                    {/* Centered Play Overlay Icon on Hover */}
+                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+                      <div className="w-9 h-9 rounded-full bg-black/60 backdrop-blur-md border border-white/20 flex items-center justify-center text-white shadow-xl shadow-black/60">
+                        <svg className="w-4 h-4 ml-0.5" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M8 5v14l11-7z" />
+                        </svg>
+                      </div>
                     </div>
 
-                    <span className="text-xs font-bold truncate text-gray-200 group-hover:text-cyan-300">
-                      {item.title}
-                    </span>
-                  </div>
-
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      deleteFavourite(favId, item.title);
-                    }}
-                    className="p-2 rounded-xl text-gray-400 hover:text-rose-400 hover:bg-rose-500/15 transition-colors ml-2 shrink-0 cursor-pointer"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              );
-            })}
+                    {/* Delete Floating Trash Button */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        triggerHaptic('light');
+                        deleteFavourite(favId, item.title);
+                      }}
+                      title="Remove favourite"
+                      className="absolute top-2 right-2 p-1.5 rounded-xl bg-black/70 backdrop-blur-md text-gray-300 hover:text-rose-400 hover:bg-rose-500/25 border border-white/10 transition-all cursor-pointer z-10"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </motion.div>
+                );
+              })}
+            </div>
           </div>
         )}
       </ModalShell>
@@ -432,13 +452,13 @@ export const Profile = () => {
             value={bugText}
             onChange={(e) => setBugText(e.target.value)}
             placeholder="Describe the issue you experienced..."
-            className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50"
+            className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-amber-500/50"
           />
 
           <button
             type="submit"
             disabled={isSubmittingBug || !bugText.trim()}
-            className="w-full py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold text-xs hover:brightness-110 transition-all disabled:opacity-50 cursor-pointer"
+            className="w-full py-2.5 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-black font-black text-xs hover:brightness-110 transition-all disabled:opacity-50 cursor-pointer shadow-md"
           >
             {isSubmittingBug ? 'Submitting...' : 'Submit Feedback'}
           </button>

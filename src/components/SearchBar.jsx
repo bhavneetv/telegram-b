@@ -57,7 +57,10 @@ export const SearchBar = ({ onSearch, isSearching }) => {
         }}
         className="relative flex-1 flex items-center"
       >
-        <div className="relative flex items-center w-full glass-panel rounded-2xl overflow-hidden focus-within:ring-2 focus-within:ring-cyan-500/50 transition-all bg-[#0F172A]/90 border border-white/10">
+        <div className="relative flex items-center w-full glass-search rounded-2xl overflow-hidden focus-within:ring-2 focus-within:ring-blue-500/40 focus-within:border-blue-400/60 transition-all duration-300">
+          {/* Subtle Chamfer Top Highlight in Blue */}
+          <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-blue-400/35 to-transparent pointer-events-none" />
+
           {/* Left-side Grey Search Icon inside input */}
           <Search className="w-4 h-4 text-gray-400 ml-3.5 shrink-0 pointer-events-none" />
 
@@ -68,8 +71,8 @@ export const SearchBar = ({ onSearch, isSearching }) => {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onFocus={() => query.trim().length >= 2 && setShowSuggestions(true)}
-              placeholder="Search high-speed movies, 4K videos & files..."
-              className="w-full py-2.5 px-3 bg-transparent text-xs text-white placeholder:text-gray-500 focus:outline-none relative z-10"
+              placeholder="Search movies, series & 4K files..."
+              className="w-full py-2.5 px-3 bg-transparent text-xs text-white placeholder:text-gray-400 focus:outline-none relative z-10 font-medium"
             />
           </div>
 
@@ -83,15 +86,15 @@ export const SearchBar = ({ onSearch, isSearching }) => {
             </button>
           )}
 
-          {/* Search Button (No search icon, text only) */}
+          {/* Search Button (Electric Blue Gradient with Pure White Text) */}
           <motion.button
             type="submit"
             whileTap={{ scale: 0.95 }}
             disabled={isSearching}
-            className={`m-1 px-4 py-2 rounded-xl text-xs font-bold text-white flex items-center justify-center transition-all shadow-md cursor-pointer shrink-0 ${
+            className={`m-1 px-4 py-2 rounded-xl text-xs font-black text-white flex items-center justify-center transition-all shadow-lg cursor-pointer shrink-0 ${
               isSearching
-                ? 'bg-cyan-600/50 cursor-not-allowed'
-                : 'bg-gradient-to-r from-cyan-500 to-blue-600 hover:opacity-90'
+                ? 'bg-blue-600/50 text-white/70 cursor-not-allowed'
+                : 'bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 shadow-blue-500/30 hover:shadow-blue-500/50 hover:brightness-110'
             }`}
           >
             {isSearching ? (
@@ -103,7 +106,7 @@ export const SearchBar = ({ onSearch, isSearching }) => {
         </div>
       </form>
 
-      {/* Autosuggestions Dropdown */}
+      {/* Autosuggestions Dropdown with Frosted Glass */}
       <AnimatePresence>
         {showSuggestions && (
           <motion.div
@@ -111,7 +114,7 @@ export const SearchBar = ({ onSearch, isSearching }) => {
             animate={{ opacity: 1, y: 0, height: 'auto' }}
             exit={{ opacity: 0, y: -10, height: 0 }}
             transition={{ duration: 0.2 }}
-            className="absolute left-0 right-0 top-12 mt-1 glass-panel rounded-2xl overflow-hidden shadow-2xl border border-white/10 z-50 bg-[#0F172A]/95 backdrop-blur-xl divide-y divide-white/5"
+            className="absolute left-0 right-0 top-12 mt-1.5 glass-frosted rounded-2xl overflow-hidden shadow-2xl z-50 divide-y divide-white/10"
           >
             {suggestions.map((item) => (
               <button
