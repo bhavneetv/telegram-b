@@ -27,44 +27,50 @@ import {
   CloudDownload,
   Clock,
   AlertTriangle,
-  Zap
+  Zap,
+  Infinity
 } from 'lucide-react';
 import { useAppState } from '../context/AppStateContext';
 import { DUMMY_CONTENT } from '../data/dummyContent';
 import { formatFileSize } from '../utils/formatters';
 import { triggerHaptic } from '../utils/telegram';
 import { AdCard } from '../components/AdCard';
+import { MovingInfinityIcon } from '../components/MovingInfinityIcon';
 import { toast } from 'sonner';
 
-// Config for each download stage (Multi-shade Blue Gradient & Red Fail State)
+// Distinct, vibrant color theme for each download stage:
+// checking -> Amber/Orange | caching -> Electric Cyan | ready -> Emerald Green | failed -> Crimson Red
 const DOWNLOAD_STAGES = {
   checking: {
-    label: 'Checking Availability...',
+    label: 'Checking Fast Cloud Route...',
     icon: Clock,
     progress: 25,
-    gradient: 'linear-gradient(90deg, #1e3a8a, #2563eb, #3b82f6, #1e3a8a)',
+    gradient: 'linear-gradient(90deg, #b45309, #d97706, #f59e0b, #fbbf24, #b45309)',
+    borderClass: 'border-amber-400/50 shadow-[0_0_24px_rgba(245,158,11,0.4)]',
     textClass: 'text-white font-bold',
   },
   caching: {
-    label: 'Caching Fast Cloud Route...',
+    label: 'Caching Turbo Cloud Route (68%)...',
     icon: CloudDownload,
     progress: 68,
-    gradient: 'linear-gradient(90deg, #1d4ed8, #0ea5e9, #3b82f6, #1d4ed8)',
+    gradient: 'linear-gradient(90deg, #0284c7, #0ea5e9, #06b6d4, #22d3ee, #0284c7)',
+    borderClass: 'border-cyan-400/50 shadow-[0_0_24px_rgba(6,182,212,0.4)]',
     textClass: 'text-white font-black',
   },
   ready: {
     label: 'Download Now',
     icon: Download,
     progress: 100,
-    // Dynamic multi-shade blue gradient: Royal blue -> Azure -> Sky blue -> Sapphire -> Cobalt
-    gradient: 'linear-gradient(90deg, #1d4ed8, #2563eb, #38bdf8, #60a5fa, #1d4ed8)',
+    gradient: 'linear-gradient(90deg, #047857, #059669, #10b981, #34d399, #047857)',
+    borderClass: 'border-emerald-400/60 shadow-[0_0_24px_rgba(16,185,129,0.5)] hover:brightness-110 active:scale-98',
     textClass: 'text-white font-black',
   },
   failed: {
     label: 'Download Failed - Tap to Retry',
     icon: AlertTriangle,
     progress: 100,
-    gradient: 'linear-gradient(90deg, #991b1b, #dc2626, #ef4444, #991b1b)',
+    gradient: 'linear-gradient(90deg, #991b1b, #dc2626, #ef4444, #f87171, #991b1b)',
+    borderClass: 'border-rose-500/60 shadow-[0_0_24px_rgba(239,68,68,0.5)] hover:brightness-110 active:scale-98',
     textClass: 'text-white font-black',
   },
 };
@@ -484,22 +490,42 @@ export const VideoPlayer = () => {
           <div className="flex items-center justify-center relative pb-2 text-center min-h-[38px]">
             <AnimatePresence mode="wait">
               {showCreditPopup ? (
-                <motion.div
-                  key="credit-deducted"
-                  initial={{ opacity: 0, y: -10, scale: 0.94 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: 10, scale: 0.94 }}
-                  transition={{ duration: 0.32, ease: 'easeOut' }}
-                  className="flex items-center gap-2 px-3.5 py-1 rounded-full bg-gradient-to-r from-emerald-500/20 via-cyan-500/20 to-blue-500/20 border border-emerald-400/40 text-emerald-300 shadow-[0_0_20px_rgba(16,185,129,0.35)]"
-                >
-                  <Zap className="w-3.5 h-3.5 fill-emerald-400 text-emerald-400 animate-bounce" />
-                  <span className="text-xs font-black tracking-wide text-white">
-                    -1 Credit Deducted
-                  </span>
-                  <span className="px-1.5 py-0.5 rounded bg-emerald-500/20 text-[10px] font-mono font-bold text-emerald-300 border border-emerald-500/30">
-                    {userProfile?.credits}/100 Left
-                  </span>
-                </motion.div>
+                isPremium ? (
+                  <motion.div
+                    key="premium-vip-credit"
+                    initial={{ opacity: 0, y: -12, scale: 0.9 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 12, scale: 0.9 }}
+                    transition={{ type: "spring", stiffness: 360, damping: 24 }}
+                    className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-amber-500/25 via-yellow-500/20 to-amber-500/25 border-2 border-amber-400/80 text-amber-300 shadow-[0_0_28px_rgba(245,158,11,0.55)]"
+                  >
+                    <Crown className="w-4 h-4 fill-amber-400 text-amber-400 animate-bounce" />
+                    <span className="text-xs font-black tracking-wide text-white">
+                      👑 Royal VIP Active: 0 Credits Cut
+                    </span>
+                    <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-amber-400/20 text-[10px] font-mono font-black text-amber-300 border border-amber-400/40">
+                      <MovingInfinityIcon theme="amber" className="w-4 h-2.5" />
+                      <span>Unlimited</span>
+                    </span>
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="credit-deducted"
+                    initial={{ opacity: 0, y: -10, scale: 0.94 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 10, scale: 0.94 }}
+                    transition={{ duration: 0.32, ease: 'easeOut' }}
+                    className="flex items-center gap-2 px-3.5 py-1 rounded-full bg-gradient-to-r from-emerald-500/20 via-cyan-500/20 to-blue-500/20 border border-emerald-400/40 text-emerald-300 shadow-[0_0_20px_rgba(16,185,129,0.35)]"
+                  >
+                    <Zap className="w-3.5 h-3.5 fill-emerald-400 text-emerald-400 animate-bounce" />
+                    <span className="text-xs font-black tracking-wide text-white">
+                      -1 Credit Deducted
+                    </span>
+                    <span className="px-1.5 py-0.5 rounded bg-emerald-500/20 text-[10px] font-mono font-bold text-emerald-300 border border-emerald-500/30">
+                      {userProfile?.credits}/100 Left
+                    </span>
+                  </motion.div>
+                )
               ) : (
                 <motion.div
                   key="mini-player-title"
@@ -906,11 +932,7 @@ export const VideoPlayer = () => {
           <button
             onClick={handleDownloadClick}
             style={{ backgroundImage: stage.gradient }}
-            className={`download-sweep w-full py-2.5 px-4 rounded-xl text-xs font-black flex items-center justify-center gap-2 transition-all duration-500 cursor-pointer shadow-lg relative overflow-hidden border ${
-              downloadStage === 'failed'
-                ? 'border-red-500/60 shadow-[0_0_20px_rgba(239,68,68,0.45)]'
-                : 'border-blue-400/40 shadow-[0_0_20px_rgba(59,130,246,0.35)] hover:brightness-110 active:scale-98'
-            } ${stage.textClass}`}
+            className={`download-sweep w-full py-2.5 px-4 rounded-xl text-xs font-black flex items-center justify-center gap-2 transition-all duration-500 cursor-pointer shadow-lg relative overflow-hidden border ${stage.borderClass} ${stage.textClass}`}
           >
             <AnimatePresence mode="wait">
               <motion.span

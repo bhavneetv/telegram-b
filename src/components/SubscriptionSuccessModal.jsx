@@ -43,12 +43,12 @@ export const SubscriptionSuccessModal = () => {
           className="absolute inset-0 bg-black/85 backdrop-blur-xl"
         />
 
-        {/* Centered Celebration Popup Card */}
+        {/* Centered Celebration Popup Card - Sliding from top to center */}
         <motion.div
-          initial={{ opacity: 0, scale: 0.88, y: 20 }}
+          initial={{ opacity: 0, scale: 0.9, y: -160 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.88, y: 20 }}
-          transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+          exit={{ opacity: 0, scale: 0.9, y: -160 }}
+          transition={{ type: 'spring', damping: 25, stiffness: 320, mass: 0.8 }}
           className="relative z-10 w-full max-w-sm rounded-[32px] bg-gradient-to-b from-[#141824] via-[#0D101A] to-[#07090F] border-2 border-amber-400/80 p-6 sm:p-7 shadow-[0_0_60px_rgba(245,158,11,0.35)] flex flex-col items-center text-center gap-4 text-white overflow-hidden"
         >
           {/* Subtle gold ambient glow */}

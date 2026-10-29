@@ -3,11 +3,54 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Search, X, Loader2 } from 'lucide-react';
 import { DUMMY_CONTENT } from '../data/dummyContent';
 
+const SEARCH_HINTS = [
+  "Search 4K movies & series...",
+  "Paste Terabox links here...",
+  "Search high-speed media...",
+  "Search trending anime & clips...",
+  "Search documents, movies & more..."
+];
+
 export const SearchBar = ({ onSearch, isSearching }) => {
   const [query, setQuery] = useState('');
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const wrapperRef = useRef(null);
+
+  // Typewriter animation state for search placeholder
+  const [placeholderText, setPlaceholderText] = useState('');
+  const [hintIndex, setHintIndex] = useState(0);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  useEffect(() => {
+    if (query) return;
+
+    const currentHint = SEARCH_HINTS[hintIndex];
+    let timeout;
+
+    if (!isDeleting) {
+      if (placeholderText.length < currentHint.length) {
+        timeout = setTimeout(() => {
+          setPlaceholderText(currentHint.slice(0, placeholderText.length + 1));
+        }, 70);
+      } else {
+        timeout = setTimeout(() => {
+          setIsDeleting(true);
+        }, 1800);
+      }
+    } else {
+      if (placeholderText.length > 0) {
+        timeout = setTimeout(() => {
+          setPlaceholderText(currentHint.slice(0, placeholderText.length - 1));
+        }, 35);
+      } else {
+        setIsDeleting(false);
+        setHintIndex((prev) => (prev + 1) % SEARCH_HINTS.length);
+      }
+    }
+
+    return () => clearTimeout(timeout);
+  }, [placeholderText, isDeleting, hintIndex, query]);
 
   // Filter autosuggestions
   useEffect(() => {
@@ -64,14 +107,14 @@ export const SearchBar = ({ onSearch, isSearching }) => {
           {/* Left-side Grey Search Icon inside input */}
           <Search className="w-4 h-4 text-gray-400 ml-3.5 shrink-0 pointer-events-none" />
 
-          {/* Simple Clean Input with Standard Placeholder */}
+          {/* Clean Input with Animated Typewriter Placeholder */}
           <div className="relative flex-1 flex items-center">
             <input
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onFocus={() => query.trim().length >= 2 && setShowSuggestions(true)}
-              placeholder="Search movies, series & 4K files..."
+              placeholder={placeholderText || "Search movies, series & 4K files..."}
               className="w-full py-2.5 px-3 bg-transparent text-xs text-white placeholder:text-gray-400 focus:outline-none relative z-10 font-medium"
             />
           </div>

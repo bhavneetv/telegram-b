@@ -32,12 +32,12 @@ export const ModalShell = ({ isOpen, onClose, title, children, className = '' })
             className="absolute inset-0 bg-black/80 backdrop-blur-md"
           />
 
-          {/* Modal Container */}
+          {/* Modal Container - Sliding from top to center */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            initial={{ opacity: 0, scale: 0.92, y: -160 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+            exit={{ opacity: 0, scale: 0.92, y: -160 }}
+            transition={{ type: 'spring', damping: 25, stiffness: 320, mass: 0.8 }}
             className={`relative w-full max-w-md max-h-[85vh] flex flex-col glass-panel rounded-3xl shadow-2xl overflow-hidden text-white ${
               className || 'bg-[#0A0D15]/98 border border-white/10 backdrop-blur-2xl shadow-[0_12px_45px_rgba(0,0,0,0.85)]'
             }`}

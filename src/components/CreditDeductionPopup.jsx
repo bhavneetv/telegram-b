@@ -52,10 +52,12 @@ export const CreditDeductionPopup = ({ isVisible, onClose }) => {
           ) : isPremium ? (
             <>
               <div className="w-5 h-5 rounded-full bg-amber-500/20 flex items-center justify-center">
-                <Crown className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                <Crown className="w-3.5 h-3.5 fill-amber-400 text-amber-400 animate-bounce" />
               </div>
-              <span className="text-xs font-black tracking-tight text-amber-300">Royal VIP Stream</span>
-              <span className="text-[10px] text-amber-400/80 font-bold">• 0 Credits Used</span>
+              <span className="text-xs font-black tracking-tight text-amber-300">Royal VIP Active</span>
+              <span className="text-[10px] text-amber-300 font-black bg-amber-400/20 px-2 py-0.5 rounded-full border border-amber-400/40 shadow-sm">
+                0 Credits Cut
+              </span>
             </>
           ) : (
             <>

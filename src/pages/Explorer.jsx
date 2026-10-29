@@ -5,6 +5,7 @@ import { SearchBar } from '../components/SearchBar';
 import { ContentCard } from '../components/ContentCard';
 import { AdCard } from '../components/AdCard';
 import { JoinChannelModal } from '../components/JoinChannelModal';
+import { MovingInfinityIcon } from '../components/MovingInfinityIcon';
 import { DUMMY_CONTENT } from '../data/dummyContent';
 import { useAppState } from '../context/AppStateContext';
 import { triggerHaptic } from '../utils/telegram';
@@ -290,15 +291,15 @@ export const Explorer = () => {
           </span>
         </div>
 
-        {/* Dynamic Credits Pill (Green first -> Yellow -> Red) */}
+        {/* Dynamic Credits Pill (Green first -> Yellow -> Red, or Animated Moving Infinity for Unlimited) */}
         {isReferralPlan ? (
-          <div className={`relative px-3.5 py-2 rounded-2xl text-xs font-black transition-all ${timerStyle.border} ${timerStyle.bg} ${timerStyle.text} flex items-center gap-1.5 shadow-md backdrop-blur-md`}>
-            <Infinity className="w-4 h-4 stroke-[2.5]" />
+          <div className={`relative px-3.5 py-2 rounded-2xl text-xs font-black transition-all ${timerStyle.border} ${timerStyle.bg} ${timerStyle.text} flex items-center gap-2 shadow-md backdrop-blur-md`}>
+            <MovingInfinityIcon theme="emerald" className="w-5 h-3" />
             <span>Credits</span>
           </div>
-        ) : isPremium ? (
-          <div className="flex items-center gap-1.5 px-3.5 py-2 rounded-2xl bg-blue-500/15 text-blue-300 border border-blue-500/40 text-xs font-black shadow-[0_0_15px_rgba(59,130,246,0.25)] backdrop-blur-md">
-            <Infinity className="w-4 h-4 stroke-[2.5]" />
+        ) : (isPremium || userProfile?.credits === 'unlimited' || userProfile?.credits === Infinity) ? (
+          <div className="flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-blue-500/15 text-blue-300 border border-blue-500/40 text-xs font-black shadow-[0_0_20px_rgba(59,130,246,0.35)] backdrop-blur-md">
+            <MovingInfinityIcon theme="blue" className="w-6 h-3.5" />
             <span>Unlimited Credits</span>
           </div>
         ) : (

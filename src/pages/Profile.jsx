@@ -19,6 +19,7 @@ import {
 import { useAppState } from '../context/AppStateContext';
 import { ModalShell } from '../components/ModalShell';
 import { JoinChannelModal } from '../components/JoinChannelModal';
+import { MovingInfinityIcon } from '../components/MovingInfinityIcon';
 import { DUMMY_CONTENT } from '../data/dummyContent';
 import { triggerHaptic } from '../utils/telegram';
 import { toast } from 'sonner';
@@ -195,7 +196,7 @@ export const Profile = () => {
             </>
           ) : isPremium ? (
             <>
-              <Infinity className="w-5 h-5 text-amber-400 stroke-[2.5]" />
+              <MovingInfinityIcon theme="amber" className="w-6 h-3.5 my-1" />
               <span className="text-[9px] font-medium text-gray-400 mt-0.5">Unlimited</span>
             </>
           ) : (

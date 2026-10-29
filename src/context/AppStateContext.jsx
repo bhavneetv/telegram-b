@@ -4,8 +4,13 @@ import { toast } from 'sonner';
 const AppStateContext = createContext();
 
 export const AppStateProvider = ({ children }) => {
-  const [isPremium, setIsPremium] = useState(false);
-  const [currentPlan, setCurrentPlan] = useState("Free"); // "Free" | "Lite (Free 1hr)" | "Lite Paid" | "Premium"
+  const [isPremium, setIsPremium] = useState(() => {
+    const stored = sessionStorage.getItem('tb_is_premium');
+    return stored === null ? true : stored === 'true';
+  });
+  const [currentPlan, setCurrentPlan] = useState(() => {
+    return sessionStorage.getItem('tb_current_plan') || "Royal Sovereign VIP";
+  });
   const [referralTimeLeft, setReferralTimeLeft] = useState(3600); // 3600 seconds = 60 mins
   const [favourites, setFavourites] = useState(["tb-101", "tb-104"]);
   const [showCreditPopup, setShowCreditPopup] = useState(false);
@@ -31,14 +36,19 @@ export const AppStateProvider = ({ children }) => {
     sessionStorage.setItem('tb_channel_joined', status ? 'true' : 'false');
   };
 
-  // Sync theme class on <body> or root container when isPremium changes
+  // Sync isPremium and currentPlan to sessionStorage
   useEffect(() => {
+    sessionStorage.setItem('tb_is_premium', isPremium ? 'true' : 'false');
     if (isPremium) {
       document.documentElement.classList.add('theme-premium');
     } else {
       document.documentElement.classList.remove('theme-premium');
     }
   }, [isPremium]);
+
+  useEffect(() => {
+    sessionStorage.setItem('tb_current_plan', currentPlan);
+  }, [currentPlan]);
 
   // Referral 1-Hour Timer countdown
   useEffect(() => {
