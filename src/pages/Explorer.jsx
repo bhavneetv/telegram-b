@@ -1,6 +1,27 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { RefreshCw, Heart, Crown, Sparkles, FilterX, Loader2, ArrowDown, Film, Zap, Infinity, AlertTriangle, Rocket, Shield } from 'lucide-react';
+import {
+  RefreshCw,
+  Heart,
+  Crown,
+  Sparkles,
+  FilterX,
+  Loader2,
+  ArrowDown,
+  Film,
+  Zap,
+  Infinity,
+  AlertTriangle,
+  Rocket,
+  Shield,
+  RotateCcw,
+  Link2Off,
+  AlertOctagon,
+  ArrowRight,
+  Clock,
+  X
+} from 'lucide-react';
 import { SearchBar } from '../components/SearchBar';
 import { ContentCard } from '../components/ContentCard';
 import { AdCard } from '../components/AdCard';
@@ -11,7 +32,22 @@ import { useAppState } from '../context/AppStateContext';
 import { triggerHaptic } from '../utils/telegram';
 import { toast } from 'sonner';
 
+const TERABOX_DOMAINS = [
+  'terabox.com',
+  '1024tera.com',
+  'teraboxapp.com',
+  'terabox.app',
+  'terasharelink.com',
+  'freeterabox.com',
+  'mirrobox.com',
+  'nephobox.com',
+  '4funbox.com',
+  'momerybox.com',
+  'tibibox.com'
+];
+
 export const Explorer = () => {
+  const navigate = useNavigate();
   const {
     favourites,
     isPremium,
@@ -21,13 +57,18 @@ export const Explorer = () => {
     setSearchQuery,
     isFavouritesOnlyFilter,
     setIsFavouritesOnlyFilter,
-    userProfile
+    userProfile,
+    setUserProfile
   } = useAppState();
 
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const [contentList, setContentList] = useState(DUMMY_CONTENT);
   const [selectedMedia, setSelectedMedia] = useState(null);
+
+  // Link status for search validation: null | { type: 'not_terabox' | 'wrong_link' | 'limit_reached' | 'failed', url: string, message: string }
+  const [linkStatus, setLinkStatus] = useState(null);
+  const [isRetrying, setIsRetrying] = useState(false);
 
   // Dynamic Live Stream Radar Rotating Headlines
   const headlinePhrases = [
@@ -66,6 +107,7 @@ export const Explorer = () => {
   }, [headlinePhrases.length]);
 
   // Pull-To-Refresh State
+  const pullDistanceRef = useRef(0);
   const [pullDistance, setPullDistance] = useState(0);
   const touchStartY = useRef(0);
 
@@ -81,6 +123,7 @@ export const Explorer = () => {
       const distance = Math.max(0, currentY - touchStartY.current);
       if (distance > 0 && distance < 120) {
         setPullDistance(distance);
+        pullDistanceRef.current = distance;
       }
     }
   };
@@ -90,6 +133,7 @@ export const Explorer = () => {
       handleRefresh();
     }
     setPullDistance(0);
+    pullDistanceRef.current = 0;
     touchStartY.current = 0;
   };
 
@@ -104,14 +148,215 @@ export const Explorer = () => {
     }, 1200);
   };
 
+  // Search & Link Validation Logic
   const handleSearchExecute = (query) => {
-    setSearchQuery(query);
-    if (query) {
+    if (!query || !query.trim()) {
+      setSearchQuery('');
+      setLinkStatus(null);
+      return;
+    }
+
+    const trimmed = query.trim();
+
+    // Check if query is a URL or link
+    const isUrl =
+      /^https?:\/\//i.test(trimmed) ||
+      /^www\./i.test(trimmed) ||
+      TERABOX_DOMAINS.some((d) => trimmed.toLowerCase().includes(d)) ||
+      (/\.[a-z]{2,}(\/|\?|$)/i.test(trimmed) && trimmed.includes('/'));
+
+    if (isUrl) {
+      // 1. Check if the link belongs to TeraBox
+      let hostname = '';
+      try {
+        const urlObj = new URL(trimmed.startsWith('http') ? trimmed : `https://${trimmed}`);
+        hostname = urlObj.hostname.toLowerCase().replace(/^www\./, '');
+      } catch (e) {
+        hostname = '';
+      }
+
+      const isTerabox = TERABOX_DOMAINS.some(
+        (domain) => hostname === domain || hostname.endsWith('.' + domain) || trimmed.toLowerCase().includes(domain)
+      );
+
+      // A) Does not belong to TeraBox
+      if (!isTerabox) {
+        triggerHaptic('heavy');
+        toast.error("Unsupported Link: Not a TeraBox URL", {
+          description: "This link does not belong to TeraBox! Please paste a valid TeraBox share link.",
+          duration: 4500
+        });
+        setLinkStatus({
+          type: 'not_terabox',
+          url: trimmed,
+          message: "This link does not belong to TeraBox. Only TeraBox share URLs (e.g., terabox.com/s/...) can be resolved."
+        });
+        setIsSearching(false);
+        return;
+      }
+
+      // B) Limit reached (User has 0 credits or URL has 'limit')
+      if ((!isPremium && userProfile?.credits <= 0) || trimmed.toLowerCase().includes('limit')) {
+        triggerHaptic('heavy');
+        toast.warning("Daily Resolving Limit Reached!", {
+          description: "You have reached your daily resolving limit. Upgrade to VIP to enjoy unlimited high-speed streams!",
+          duration: 5000,
+          action: {
+            label: "Upgrade to VIP",
+            onClick: () => navigate('/premium')
+          }
+        });
+        setLinkStatus({
+          type: 'limit_reached',
+          url: trimmed,
+          message: "Daily Resolving Limit Reached! Free tier has reached today's limit. Upgrade to Royal VIP for infinite resolutions with zero wait time."
+        });
+        setIsSearching(false);
+        return;
+      }
+
+      // C) Wrong / Malformed link
+      const isMalformed =
+        trimmed.toLowerCase().includes('wrong') ||
+        trimmed.toLowerCase().includes('invalid') ||
+        trimmed.toLowerCase().includes('broken') ||
+        (!trimmed.includes('/s/') && !trimmed.includes('surl=') && !trimmed.includes('/sharing/'));
+
+      if (isMalformed) {
+        triggerHaptic('heavy');
+        toast.error("Wrong Link Found!", {
+          description: "The share URL is malformed or invalid. Please check your link and try again.",
+          duration: 4500
+        });
+        setLinkStatus({
+          type: 'wrong_link',
+          url: trimmed,
+          message: "Wrong link found! The TeraBox URL is malformed, expired, or missing the share key. Please check your link and paste again."
+        });
+        setIsSearching(false);
+        return;
+      }
+
+      // D) Valid TeraBox link that fails to resolve (e.g. contains 'fail' or simulation)
+      if (trimmed.toLowerCase().includes('fail') || trimmed.toLowerCase().includes('error')) {
+        setIsSearching(true);
+        setTimeout(() => {
+          setIsSearching(false);
+          triggerHaptic('heavy');
+          toast.error("Link Resolution Failed", {
+            description: "TeraBox cloud nodes timed out while fetching media. Click Try Again to retry.",
+            duration: 6000,
+            action: {
+              label: "Try Again",
+              onClick: () => handleRetryResolve(trimmed)
+            }
+          });
+          setLinkStatus({
+            type: 'failed',
+            url: trimmed,
+            message: "Link resolution failed due to cloud node timeout. Your link is valid, but the server didn't respond."
+          });
+        }, 1000);
+        return;
+      }
+
+      // E) Valid link succeeds!
       setIsSearching(true);
       setTimeout(() => {
         setIsSearching(false);
-      }, 1000);
+        triggerHaptic('medium');
+        setLinkStatus(null);
+
+        // Deduct 1 credit if not premium
+        if (!isPremium && userProfile?.credits > 0 && typeof setUserProfile === 'function') {
+          setUserProfile((prev) => ({
+            ...prev,
+            credits: Math.max(0, (prev.credits || 100) - 1)
+          }));
+        }
+
+        const shareCode = trimmed.split('/').pop()?.slice(0, 14) || 'Cloud Media';
+        const newItem = {
+          id: `resolved-${Date.now()}`,
+          title: `TeraBox 4K Media: ${shareCode}`,
+          category: 'Cloud',
+          thumbnail: 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=800&auto=format&fit=crop&q=60',
+          duration: '02:14:30',
+          quality: '4K HDR',
+          views: '1.4k',
+          size: '2.8 GB',
+          likes: 95,
+          isResolved: true
+        };
+
+        setContentList((prev) => [newItem, ...prev]);
+        setSearchQuery('');
+
+        toast.success("TeraBox Link Resolved!", {
+          description: "1 item added to feed. Ready to stream in 4K HDR.",
+          duration: 4000,
+          action: {
+            label: "Watch Now",
+            onClick: () => setSelectedMedia(newItem)
+          }
+        });
+      }, 1200);
+      return;
     }
+
+    // Normal keyword search
+    setLinkStatus(null);
+    setSearchQuery(trimmed);
+    setIsSearching(true);
+    setTimeout(() => {
+      setIsSearching(false);
+    }, 600);
+  };
+
+  // Retry resolution for failed valid links
+  const handleRetryResolve = (url) => {
+    triggerHaptic('medium');
+    setIsRetrying(true);
+    toast.loading("Retrying link resolution...", { id: 'retry-resolve-toast' });
+
+    setTimeout(() => {
+      setIsRetrying(false);
+      toast.dismiss('retry-resolve-toast');
+      setLinkStatus(null);
+
+      if (!isPremium && userProfile?.credits > 0 && typeof setUserProfile === 'function') {
+        setUserProfile((prev) => ({
+          ...prev,
+          credits: Math.max(0, (prev.credits || 100) - 1)
+        }));
+      }
+
+      const shareCode = (url || '').split('/').pop()?.replace(/fail/gi, 'stream')?.slice(0, 14) || 'Stream 4K';
+      const resolvedItem = {
+        id: `retry-resolved-${Date.now()}`,
+        title: `TeraBox Media (Resolved): ${shareCode} 4K`,
+        category: 'Cloud',
+        thumbnail: 'https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?w=800&auto=format&fit=crop&q=60',
+        duration: '01:58:12',
+        quality: '4K HDR',
+        views: '3.6k',
+        size: '3.2 GB',
+        likes: 148,
+        isResolved: true
+      };
+
+      setContentList((prev) => [resolvedItem, ...prev]);
+      setSearchQuery('');
+
+      toast.success("Link Resolved Successfully on Retry!", {
+        description: "Ready to stream in 4K HDR",
+        duration: 4000,
+        action: {
+          label: "Watch Now",
+          onClick: () => setSelectedMedia(resolvedItem)
+        }
+      });
+    }, 1200);
   };
 
   const filteredContent = contentList.filter((item) => {
@@ -161,7 +406,7 @@ export const Explorer = () => {
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
-      className="flex flex-col gap-3.5 pb-24 px-4 max-w-6xl mx-auto pt-[53px] relative overflow-x-hidden"
+      className="flex flex-col gap-3.5 pb-24 px-4 max-w-6xl mx-auto pt-7 sm:pt-9 relative overflow-x-hidden"
     >
       {/* Pull To Refresh Indicator */}
       <AnimatePresence>
@@ -192,86 +437,101 @@ export const Explorer = () => {
         )}
       </AnimatePresence>
 
-      {/* Centered Title ("Terabox" Title + Tilted Crown Positioned ABOVE "MINI" Badge) */}
-      <div className="flex items-center justify-center relative py-1 text-center">
-        <div className="flex items-center gap-2">
-          <span className="text-2xl font-bold tracking-tight text-white">
+      {/* Centered Modern Unified Logo */}
+      <div className="flex items-center justify-center pt-2 pb-1 text-center">
+        <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-2xl bg-gradient-to-r from-blue-950/40 via-sky-950/30 to-indigo-950/40 backdrop-blur-xl shadow-lg">
+          <span className="text-2xl font-black tracking-tight text-white drop-shadow-[0_2px_12px_rgba(255,255,255,0.25)]">
             Terabox
           </span>
-
-          <div className="relative flex flex-col items-center">
-            {/* Tilted Crown ABOVE "MINI" text if Premium */}
-            {isPremium && (
-              <Crown className="w-4 h-4 fill-blue-400 text-blue-400 -rotate-12 absolute -top-3.5 drop-shadow-[0_0_10px_rgba(59,130,246,0.8)] animate-bounce" />
-            )}
-            <span className="px-2 py-0.5 rounded-lg bg-blue-500/15 text-blue-300 border border-blue-500/30 text-[10px] font-black uppercase tracking-widest shadow-[0_0_12px_rgba(59,130,246,0.25)] mt-0.5">
-              MINI
-            </span>
-          </div>
+          <span className="px-2.5 py-0.5 rounded-xl bg-gradient-to-r from-blue-600 via-sky-500 to-indigo-600 text-white text-[10.5px] font-black uppercase tracking-widest shadow-[0_0_16px_rgba(56,189,248,0.6)] flex items-center gap-1.5">
+            {isPremium && <Crown className="w-3.5 h-3.5 fill-amber-300 text-amber-300 animate-pulse" />}
+            <span>MINI</span>
+          </span>
         </div>
       </div>
 
-      {/* Luxury Cloud Stream Radar Live Banner (Electric Blue Theme) */}
-      <div className="relative overflow-hidden rounded-2xl glass-search p-3 sm:p-3.5 border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.5),inset_0_1px_1px_rgba(255,255,255,0.18)] transition-all duration-300 hover:border-blue-500/40 group">
-        {/* Specular Top Chamfer Glow in Sapphire Blue */}
-        <div className="absolute top-0 inset-x-0 h-[1.5px] bg-gradient-to-r from-transparent via-blue-400/80 to-transparent" />
-        <div className="absolute -top-10 -right-10 w-36 h-28 bg-blue-500/15 rounded-full blur-2xl pointer-events-none" />
+      {/* Brand New Cinema Spotlight Hero (Completely New Modern Look) */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#0F1C36]/90 via-[#0A1224]/95 to-[#060B16] p-4 sm:p-5 shadow-[0_20px_50px_rgba(0,0,0,0.8),0_0_35px_rgba(34,211,238,0.15)] backdrop-blur-3xl group">
+        {/* Holographic Top Glow Line */}
+        <div className="absolute top-0 inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-cyan-400 to-transparent shadow-[0_0_15px_rgba(34,211,238,0.9)] pointer-events-none" />
+        <div className="absolute -top-16 left-1/2 -translate-x-1/2 w-64 h-24 bg-cyan-500/15 rounded-full blur-3xl pointer-events-none" />
 
-        {/* Top Header Status Row */}
-        <div className="flex items-center justify-between pb-2 text-[9.5px] font-black uppercase tracking-widest">
-          <div className="flex items-center gap-2">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.9)]" />
-            </span>
-            <span className="text-gray-300 font-extrabold tracking-wider text-[10px]">Cloud Stream Radar</span>
-            <span className="hidden sm:inline-block px-2 py-0.5 rounded-full bg-white/5 text-gray-400 text-[8.5px] font-semibold border border-white/10">
-              Live Network
-            </span>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          {/* Left: Dynamic Live Headline with Glowing Icon */}
+          <div className="flex items-center gap-3.5 min-w-0">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-cyan-500/30 via-blue-600/30 to-indigo-600/30 flex items-center justify-center shrink-0 shadow-[0_0_25px_rgba(6,182,212,0.4)] text-cyan-300">
+              {(() => {
+                const CurrentIcon = headlinePhrases[phraseIdx]?.icon || Sparkles;
+                return <CurrentIcon className="w-6 h-6 drop-shadow-[0_0_8px_rgba(6,182,212,0.8)]" />;
+              })()}
+            </div>
+            <div className="flex flex-col min-w-0">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="flex h-2 w-2 relative">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400 shadow-[0_0_8px_rgba(16,185,129,1)]" />
+                </span>
+                <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400">
+                  HYPER-SPEED CLOUD CDN
+                </span>
+                <span className="px-2 py-0.5 rounded-full bg-cyan-500/15 text-cyan-300 text-[9px] font-black">
+                  60 FPS
+                </span>
+              </div>
+              <AnimatePresence mode="wait">
+                {(() => {
+                  const current = headlinePhrases[phraseIdx];
+                  return (
+                    <motion.div
+                      key={phraseIdx}
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -8 }}
+                      transition={{ duration: 0.28, ease: 'easeOut' }}
+                      className="flex items-center gap-1.5 flex-wrap"
+                    >
+                      <span className="text-sm sm:text-base font-extrabold text-white tracking-tight">
+                        {current.prefix}
+                      </span>
+                      <span className="text-sm sm:text-base font-black bg-gradient-to-r from-cyan-300 via-sky-300 to-indigo-300 bg-clip-text text-transparent tracking-tight drop-shadow-[0_0_12px_rgba(6,182,212,0.5)]">
+                        {current.highlight}
+                      </span>
+                    </motion.div>
+                  );
+                })()}
+              </AnimatePresence>
+            </div>
           </div>
 
-          <div className="flex items-center gap-1.5 text-[8.5px] font-black text-blue-300 bg-blue-500/15 px-2.5 py-0.5 rounded-full border border-blue-400/30 shadow-[0_0_12px_rgba(59,130,246,0.3)]">
-            <Sparkles className="w-2.5 h-2.5 text-blue-400 fill-blue-400" />
-            <span>4K HDR READY</span>
+          {/* Right: Live Stream Stat Equalizer Pod */}
+          <div className="flex items-center gap-3 self-start sm:self-center bg-black/40 px-3.5 py-2 rounded-2xl shadow-inner shrink-0">
+            <div className="flex items-end gap-1 h-5">
+              <span className="w-1 bg-cyan-400 rounded-full animate-bounce h-3" />
+              <span className="w-1 bg-blue-500 rounded-full animate-bounce h-5" style={{ animationDelay: '0.15s' }} />
+              <span className="w-1 bg-sky-300 rounded-full animate-bounce h-2.5" style={{ animationDelay: '0.3s' }} />
+              <span className="w-1 bg-indigo-400 rounded-full animate-bounce h-4" style={{ animationDelay: '0.2s' }} />
+            </div>
+            <div className="flex flex-col text-right">
+              <span className="text-[10.5px] font-black text-cyan-300 tracking-wider">4K ULTRA HDR</span>
+              <span className="text-[8.5px] font-bold text-gray-400 uppercase tracking-widest">ZERO BUFFERING</span>
+            </div>
           </div>
         </div>
 
-        {/* Dynamic Highlight Row with Silky Smooth Slide Transition */}
-        <div className="relative flex items-center min-h-[38px] bg-black/35 rounded-xl px-2.5 py-1.5 border border-white/5 overflow-hidden">
-          <AnimatePresence mode="wait">
-            {(() => {
-              const current = headlinePhrases[phraseIdx];
-              const CurrentIcon = current.icon;
-              return (
-                <motion.div
-                  key={phraseIdx}
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -8 }}
-                  transition={{ duration: 0.32, ease: 'easeOut' }}
-                  className="flex items-center justify-between w-full gap-2"
-                >
-                  <div className="flex items-center gap-2 min-w-0">
-                    <div className="p-1 rounded-lg bg-blue-500/15 border border-blue-500/30 text-blue-400 shrink-0 shadow-[0_0_10px_rgba(59,130,246,0.3)]">
-                      <CurrentIcon className="w-3.5 h-3.5" />
-                    </div>
-                    <div className="flex items-center flex-wrap gap-x-1.5 text-xs sm:text-sm truncate">
-                      <span className="font-extrabold text-white tracking-tight">
-                        {current.prefix}
-                      </span>
-                      <span className="font-black bg-gradient-to-r from-blue-400 via-sky-300 to-indigo-400 bg-clip-text text-transparent tracking-tight drop-shadow-[0_0_12px_rgba(59,130,246,0.5)]">
-                        {current.highlight}
-                      </span>
-                    </div>
-                  </div>
-
-                  <span className="hidden xs:flex items-center text-[8px] font-black text-blue-300 bg-blue-500/15 px-2 py-0.5 rounded-md border border-blue-500/25 uppercase tracking-widest shrink-0">
-                    {current.tag}
-                  </span>
-                </motion.div>
-              );
-            })()}
-          </AnimatePresence>
+        {/* Feature Pills Strip */}
+        <div className="grid grid-cols-3 gap-2 mt-3.5 pt-3 border-t border-white/[0.08]">
+          <div className="flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-xl bg-white/[0.04] text-center">
+            <Zap className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+            <span className="text-[10.5px] font-extrabold text-gray-200">Instant Play</span>
+          </div>
+          <div className="flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-xl bg-white/[0.04] text-center">
+            <Rocket className="w-3.5 h-3.5 text-blue-400 shrink-0" />
+            <span className="text-[10.5px] font-extrabold text-gray-200">Max Turbo</span>
+          </div>
+          <div className="flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-xl bg-white/[0.04] text-center">
+            <Crown className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+            <span className="text-[10.5px] font-extrabold text-gray-200">100% Ad-Free</span>
+          </div>
         </div>
       </div>
 
@@ -280,6 +540,134 @@ export const Explorer = () => {
         onSearch={handleSearchExecute}
         isSearching={isSearching}
       />
+
+      {/* Dynamic Search Link Status Alert Banner */}
+      <AnimatePresence>
+        {linkStatus && (
+          <motion.div
+            initial={{ opacity: 0, y: -10, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -10, scale: 0.98 }}
+            transition={{ duration: 0.25 }}
+            className={`relative overflow-hidden rounded-2xl p-3.5 border backdrop-blur-xl shadow-lg flex flex-col gap-2.5 ${
+              linkStatus.type === 'not_terabox'
+                ? 'bg-amber-950/35 border-amber-500/50 text-amber-200 shadow-amber-500/10'
+                : linkStatus.type === 'wrong_link'
+                ? 'bg-rose-950/35 border-rose-500/50 text-rose-200 shadow-rose-500/10'
+                : linkStatus.type === 'limit_reached'
+                ? 'bg-purple-950/35 border-purple-500/50 text-purple-200 shadow-purple-500/10'
+                : 'bg-orange-950/35 border-orange-500/50 text-orange-200 shadow-orange-500/10'
+            }`}
+          >
+            <div className="flex items-start justify-between gap-2.5">
+              <div className="flex items-start gap-2.5">
+                <div className="p-1.5 rounded-xl bg-black/40 border border-white/10 shrink-0 mt-0.5">
+                  {linkStatus.type === 'not_terabox' && <Link2Off className="w-4 h-4 text-amber-400" />}
+                  {linkStatus.type === 'wrong_link' && <AlertOctagon className="w-4 h-4 text-rose-400" />}
+                  {linkStatus.type === 'limit_reached' && <Clock className="w-4 h-4 text-purple-400" />}
+                  {linkStatus.type === 'failed' && <AlertTriangle className="w-4 h-4 text-orange-400" />}
+                </div>
+                <div className="flex flex-col gap-0.5">
+                  <span className="text-xs font-black tracking-wide uppercase">
+                    {linkStatus.type === 'not_terabox' && 'Unsupported Link'}
+                    {linkStatus.type === 'wrong_link' && 'Wrong Link Found'}
+                    {linkStatus.type === 'limit_reached' && 'Daily Resolving Limit Reached'}
+                    {linkStatus.type === 'failed' && 'Link Resolution Failed'}
+                  </span>
+                  <p className="text-[11px] text-gray-300 font-medium leading-relaxed">
+                    {linkStatus.message}
+                  </p>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setLinkStatus(null)}
+                className="p-1 rounded-full hover:bg-white/10 text-gray-400 hover:text-white transition-colors shrink-0 cursor-pointer"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+
+            {/* Action Buttons for Link Banner */}
+            <div className="flex items-center gap-2 pt-1 border-t border-white/10 justify-end">
+              {linkStatus.type === 'failed' && (
+                <button
+                  onClick={() => handleRetryResolve(linkStatus.url)}
+                  disabled={isRetrying}
+                  className="px-3.5 py-1.5 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-orange-500/25 active:scale-95 transition-all cursor-pointer"
+                >
+                  <RotateCcw className={`w-3.5 h-3.5 ${isRetrying ? 'animate-spin' : ''}`} />
+                  <span>{isRetrying ? 'Retrying...' : 'Try Again'}</span>
+                </button>
+              )}
+
+              {linkStatus.type === 'limit_reached' && (
+                <button
+                  onClick={() => {
+                    triggerHaptic('medium');
+                    navigate('/premium');
+                  }}
+                  className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-600 hover:brightness-110 text-white font-black text-xs flex items-center gap-1.5 shadow-md shadow-purple-500/25 active:scale-95 transition-all cursor-pointer"
+                >
+                  <Crown className="w-3.5 h-3.5 text-amber-300 fill-amber-300" />
+                  <span>Upgrade to VIP</span>
+                </button>
+              )}
+
+              <button
+                onClick={() => setLinkStatus(null)}
+                className="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-gray-300 text-xs font-semibold transition-all cursor-pointer"
+              >
+                Dismiss
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Low Credits Alert Banner: "Watch Unlimited with Premium" */}
+      {!isPremium && (userProfile?.credits <= 20) && (
+        <motion.div
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="relative overflow-hidden rounded-2xl p-3.5 sm:p-4 bg-gradient-to-r from-amber-500/15 via-purple-500/10 to-blue-500/15 border border-amber-400/40 shadow-[0_4px_25px_rgba(245,158,11,0.18)] backdrop-blur-xl"
+        >
+          {/* Specular top glow */}
+          <div className="absolute top-0 inset-x-0 h-[1.5px] bg-gradient-to-r from-transparent via-amber-400/80 to-transparent pointer-events-none" />
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-center shrink-0 shadow-[0_0_15px_rgba(245,158,11,0.3)]">
+                <Crown className="w-5 h-5 text-amber-400 fill-amber-400 animate-pulse" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-black text-amber-300 uppercase tracking-wider">
+                    {userProfile?.credits === 0 ? 'Out of Credits' : `Low Credit Alert (${userProfile?.credits || 0}/100)`}
+                  </span>
+                  <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-amber-400/20 text-amber-300 border border-amber-400/30">
+                    VIP Deal
+                  </span>
+                </div>
+                <p className="text-xs text-gray-200 font-medium mt-0.5">
+                  Skip daily waiting limits & buffer-free 4K streaming.
+                </p>
+              </div>
+            </div>
+
+            <button
+              onClick={() => {
+                triggerHaptic('medium');
+                navigate('/premium');
+              }}
+              className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-slate-950 font-black text-xs hover:brightness-110 active:scale-95 shadow-lg shadow-amber-500/25 flex items-center justify-center gap-1.5 transition-all cursor-pointer whitespace-nowrap"
+            >
+              <Sparkles className="w-3.5 h-3.5 fill-slate-950" />
+              <span>Watch Unlimited with Premium</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </motion.div>
+      )}
 
       {/* Separated Media Count & Credits Row - Distinct Cards */}
       <div className="flex items-center justify-between gap-2.5 pt-1.5">

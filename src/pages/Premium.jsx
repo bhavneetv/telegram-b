@@ -34,35 +34,138 @@ const TIERS = {
     level: 1,
     label: 'Trial Pass',
     badge: '1-Hour Trial',
-    text: 'text-emerald-400',
     accentText: 'text-emerald-400',
-    border: 'border-emerald-500/30',
-    glow: 'shadow-emerald-500/10',
+    border: 'border-emerald-500/40',
+    glow: 'shadow-[0_0_30px_rgba(16,185,129,0.15)]',
+    cardBg: 'bg-gradient-to-b from-emerald-950/20 via-[#0a0d16] to-[#07090e]',
     barLit: 'bg-emerald-400',
-    button: 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-500/25'
+    circleBorderColors: ['rgba(255, 255, 255, 0.25)', 'rgba(52, 211, 153, 0.5)', 'rgba(52, 211, 153, 0.95)'],
+    circleBgColors: ['rgba(255, 255, 255, 0.04)', 'rgba(16, 185, 129, 0.12)', 'rgba(16, 185, 129, 0.22)'],
+    circleShadow: 'shadow-[0_0_10px_rgba(16,185,129,0.45)]',
+    checkColor: 'text-emerald-300',
+    rippleBg: 'bg-emerald-400/35',
+    button: 'bg-gradient-to-r from-emerald-500/20 to-teal-500/20 hover:from-emerald-500/30 hover:to-teal-500/30 text-emerald-300 border border-emerald-500/50 hover:border-emerald-400 shadow-lg shadow-emerald-500/10'
   },
   silver: {
     level: 2,
     label: 'Daily VIP',
-    badge: '24-Hour Pass',
-    text: 'text-amber-300',
-    accentText: 'text-amber-300',
-    border: 'border-white/10',
-    glow: 'shadow-md',
-    barLit: 'bg-amber-300',
-    button: 'bg-white/10 text-white border border-white/20 hover:bg-white/15 shadow-md'
+    badge: '24-Hour VIP',
+    accentText: 'text-blue-400',
+    border: 'border-blue-500/40',
+    glow: 'shadow-[0_0_30px_rgba(59,130,246,0.18)]',
+    cardBg: 'bg-gradient-to-b from-blue-950/25 via-[#0a0d16] to-[#07090e]',
+    barLit: 'bg-blue-400',
+    circleBorderColors: ['rgba(255, 255, 255, 0.25)', 'rgba(96, 165, 250, 0.5)', 'rgba(96, 165, 250, 0.95)'],
+    circleBgColors: ['rgba(255, 255, 255, 0.04)', 'rgba(59, 130, 246, 0.12)', 'rgba(59, 130, 246, 0.22)'],
+    circleShadow: 'shadow-[0_0_10px_rgba(59,130,246,0.45)]',
+    checkColor: 'text-blue-300',
+    rippleBg: 'bg-blue-400/35',
+    button: 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black border border-blue-400/40 shadow-lg shadow-blue-500/25 hover:brightness-110'
   },
   gold: {
     level: 3,
     label: 'Royal Sovereign VIP',
     badge: '👑 Royal Choice',
-    text: 'text-amber-400',
     accentText: 'text-amber-400',
     border: 'border-amber-400/80',
-    glow: 'shadow-2xl shadow-amber-500/30 ring-1 ring-amber-400/40',
+    glow: 'shadow-[0_0_40px_rgba(245,158,11,0.3)] ring-1 ring-amber-400/40',
+    cardBg: 'bg-gradient-to-b from-amber-950/30 via-[#0e1017] to-[#07090e]',
     barLit: 'bg-amber-400',
-    button: 'bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-slate-950 font-black hover:brightness-110 shadow-lg shadow-amber-500/30'
+    circleBorderColors: ['rgba(255, 255, 255, 0.25)', 'rgba(251, 191, 36, 0.5)', 'rgba(251, 191, 36, 0.95)'],
+    circleBgColors: ['rgba(255, 255, 255, 0.04)', 'rgba(245, 158, 11, 0.12)', 'rgba(245, 158, 11, 0.25)'],
+    circleShadow: 'shadow-[0_0_12px_rgba(245,158,11,0.5)]',
+    checkColor: 'text-amber-300',
+    rippleBg: 'bg-amber-400/40',
+    button: 'bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-slate-950 font-black hover:brightness-110 shadow-lg shadow-amber-500/30 active:scale-95'
   }
+};
+
+// Animated Checkmark Item with Smooth Sequential Drawing Inside Circle
+const AnimatedCheckItem = ({ text, orderIndex = 0, tone, isActivePlan }) => {
+  const checkDelay = 0.18 + orderIndex * 0.09;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: -6 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ duration: 0.3, delay: Math.min(orderIndex * 0.04, 0.35) }}
+      className="flex items-center gap-2.5 text-xs text-gray-200 group"
+    >
+      {/* Animated Circle Container */}
+      <div className="relative flex items-center justify-center w-5 h-5 shrink-0">
+        {/* Base circle border & background: circle shows immediately on page load, then checks smoothly */}
+        <motion.div
+          initial={{
+            scale: 0.85,
+            borderColor: 'rgba(255, 255, 255, 0.25)',
+            backgroundColor: 'rgba(255, 255, 255, 0.04)'
+          }}
+          animate={{
+            scale: [0.85, 1, 1.18, 1],
+            borderColor: isActivePlan
+              ? ['rgba(255, 255, 255, 0.25)', 'rgba(251, 191, 36, 0.5)', 'rgba(251, 191, 36, 0.95)']
+              : tone.circleBorderColors,
+            backgroundColor: isActivePlan
+              ? ['rgba(255, 255, 255, 0.04)', 'rgba(251, 191, 36, 0.12)', 'rgba(251, 191, 36, 0.25)']
+              : tone.circleBgColors
+          }}
+          transition={{
+            duration: 0.45,
+            delay: checkDelay,
+            times: [0, 0.3, 0.7, 1],
+            ease: 'easeOut'
+          }}
+          className={`w-5 h-5 rounded-full border flex items-center justify-center transition-shadow ${
+            isActivePlan
+              ? 'shadow-[0_0_10px_rgba(251,191,36,0.5)]'
+              : tone.circleShadow
+          }`}
+        >
+          {/* Animated SVG Check Path that draws smoothly inside the circle */}
+          <motion.svg
+            viewBox="0 0 16 16"
+            className="w-3 h-3"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <motion.path
+              d="M3.5 8.5L6.5 11.5L12.5 4.5"
+              stroke="currentColor"
+              strokeWidth="2.2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className={isActivePlan ? 'text-amber-300' : tone.checkColor}
+              initial={{ pathLength: 0, opacity: 0 }}
+              animate={{ pathLength: 1, opacity: 1 }}
+              transition={{
+                duration: 0.32,
+                delay: checkDelay + 0.05,
+                ease: [0.16, 1, 0.3, 1]
+              }}
+            />
+          </motion.svg>
+        </motion.div>
+
+        {/* Subtle pop/ripple effect when checked */}
+        <motion.div
+          initial={{ scale: 0.6, opacity: 0 }}
+          animate={{ scale: [0.6, 1.35, 1.75], opacity: [0, 0.65, 0] }}
+          transition={{
+            duration: 0.5,
+            delay: checkDelay + 0.06,
+            ease: 'easeOut'
+          }}
+          className={`absolute inset-0 rounded-full pointer-events-none ${
+            isActivePlan ? 'bg-amber-400/35' : tone.rippleBg
+          }`}
+        />
+      </div>
+
+      <span className="leading-snug font-medium text-gray-200 group-hover:text-white transition-colors">
+        {text}
+      </span>
+    </motion.div>
+  );
 };
 
 const SignalMeter = ({ level, tone }) => {
@@ -121,10 +224,10 @@ export const Premium = () => {
       tone: TIERS.free,
       speedLabel: 'Stream Only',
       features: [
-        'Unlimited HD 4K streaming',
-        'Instant invite activation',
-        'Zero buffering cloud speed',
-        'No direct file downloads'
+        'Instant 4K Ultra HD & 60FPS Streaming',
+        'Zero Cloud Buffering with Fast CDN Routes',
+        '1-Click Instant Friend Referral Unlock',
+        '100% Ad-Free Mini Player Experience'
       ],
       cta: 'Activate Free Access Key'
     },
@@ -142,10 +245,10 @@ export const Premium = () => {
       tone: TIERS.silver,
       speedLabel: '5 files / min',
       features: [
-        'Unlimited 4K HD streaming',
-        '5 High-speed downloads / min',
-        '100% Ad-Free experience',
-        'Priority cloud route'
+        'Unlimited 4K HDR High-Speed Streaming',
+        'Turbo Direct Cloud Downloads (5 files/min)',
+        '100% Zero Sponsor Ads & Zero Popups',
+        'Dedicated VIP High-Speed Bandwidth Route'
       ],
       cta: 'Get Daily Pass'
     },
@@ -163,12 +266,12 @@ export const Premium = () => {
       tone: TIERS.gold,
       speedLabel: '10 files / min (Max Turbo)',
       features: [
-        'Unlimited 4K Ultra HD streaming',
-        '10 Turbo downloads / min (Max Speed)',
-        'Royal Crown VIP Profile Badge',
-        '100% Ad-Free & Zero Sponsor Popups',
-        'Exclusive VIP Priority 24/7 Route',
-        'Unlimited Daily Credits'
+        'Unlimited 4K Ultra HD Cinema Streaming',
+        'Max Turbo Direct Downloads (10 files/min)',
+        'Permanent Royal Crown VIP Profile Badge',
+        '100% Zero Ads & Watermark-Free Downloads',
+        'Infinite Daily Streaming & Download Credits',
+        '24/7 Dedicated Cloud Server Priority Route'
       ],
       cta: 'Join Royal VIP'
     }
@@ -263,7 +366,7 @@ export const Premium = () => {
   }
 
   return (
-    <div className="flex flex-col gap-6 pb-28 px-4 max-w-4xl mx-auto pt-[65px] text-white">
+    <div className="flex flex-col gap-6 pb-28 px-4 max-w-5xl mx-auto pt-[65px] text-white">
       {/* TIER CARDS GRID */}
       <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between px-1">
@@ -285,26 +388,31 @@ export const Premium = () => {
                 key={plan.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3, delay: index * 0.08 }}
-                whileHover={{ y: -5 }}
-                className={`relative flex flex-col justify-between p-5 rounded-3xl transition-all duration-300 border ${
+                transition={{ duration: 0.35, delay: index * 0.1 }}
+                whileHover={{ y: -6 }}
+                className={`relative flex flex-col justify-between p-5 sm:p-6 rounded-3xl transition-all duration-300 border backdrop-blur-xl overflow-hidden ${
                   isActivePlan
-                    ? 'border-2 border-amber-400 shadow-2xl shadow-amber-500/30 bg-amber-950/30 md:-translate-y-2'
+                    ? 'border-2 border-amber-400 shadow-[0_0_45px_rgba(245,158,11,0.35)] bg-gradient-to-b from-amber-950/40 via-[#0e1017] to-[#07090e] md:-translate-y-2'
                     : plan.isPopular
-                    ? `border-2 ${tone.border} ${tone.glow} bg-gradient-to-b from-amber-950/20 via-[#0a0d16] to-[#07090e] md:-translate-y-2`
-                    : `bg-[#0a0d16]/90 ${tone.border} hover:border-white/20 shadow-lg`
+                    ? `border-2 ${tone.border} ${tone.glow} ${tone.cardBg} md:-translate-y-2`
+                    : `${tone.cardBg} ${tone.border} hover:border-white/30 shadow-xl`
                 }`}
               >
+                {/* Specular Top Chamfer Light Highlight */}
+                <div className={`absolute top-0 inset-x-0 h-[1.5px] bg-gradient-to-r from-transparent ${
+                  isActivePlan ? 'via-amber-400/90' : plan.isPopular ? 'via-amber-400/80' : 'via-white/20'
+                } to-transparent pointer-events-none`} />
+
                 {/* Popular / Active Ribbon Badge */}
                 {plan.isPopular && !isActivePlan && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-slate-950 text-[10px] font-black uppercase tracking-widest shadow-lg flex items-center gap-1">
+                  <div className="inline-flex self-start mb-2.5 px-3 py-0.5 rounded-full bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-slate-950 text-[10px] font-black uppercase tracking-widest shadow-lg shadow-amber-500/30 items-center gap-1">
                     <Sparkles className="w-3 h-3 fill-slate-950" />
                     <span>{plan.badge}</span>
                   </div>
                 )}
 
                 {isActivePlan && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-950 text-[10px] font-black uppercase tracking-widest shadow-md flex items-center gap-1">
+                  <div className="inline-flex self-start mb-2.5 px-3 py-0.5 rounded-full bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-950 text-[10px] font-black uppercase tracking-widest shadow-lg shadow-amber-500/40 items-center gap-1.5">
                     <CheckCircle2 className="w-3.5 h-3.5" />
                     <span>Active Royal Pass</span>
                   </div>
@@ -312,18 +420,18 @@ export const Premium = () => {
 
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <h3 className="text-base font-extrabold text-white flex items-center gap-1.5">
+                    <h3 className="text-base font-black text-white flex items-center gap-1.5">
                       {plan.isPopular && <Crown className="w-4 h-4 text-amber-400 fill-amber-400" />}
                       <span>{plan.name}</span>
                     </h3>
                     {!plan.isPopular && !isActivePlan && (
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/10 text-gray-300">
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/10 text-gray-300 border border-white/10">
                         {plan.badge}
                       </span>
                     )}
                   </div>
 
-                  <div className="mb-3">
+                  <div className="mb-3.5">
                     <span className={`text-2xl font-black ${isActivePlan ? 'text-amber-400' : tone.accentText}`}>
                       {plan.priceDisplay}
                     </span>
@@ -331,29 +439,40 @@ export const Premium = () => {
                   </div>
 
                   {/* Signal Speed Meter */}
-                  <div className="flex items-center justify-between mb-4 px-3.5 py-2.5 rounded-xl bg-black/40 border border-white/5">
+                  <div className="flex items-center justify-between mb-4 px-3.5 py-2 rounded-xl bg-black/40 border border-white/5">
                     <div className={isActivePlan ? 'text-amber-400' : tone.accentText}>
                       <SignalMeter level={tone.level} tone={isActivePlan ? TIERS.gold : tone} />
                     </div>
                     <span className="text-[11px] font-bold text-gray-300">{plan.speedLabel}</span>
                   </div>
 
-                  {/* Bullet features */}
-                  <div className="flex flex-col gap-2 mb-6 border-t border-white/10 pt-3">
-                    {plan.features.map((feature, idx) => (
-                      <div key={idx} className="flex items-center gap-2 text-xs text-gray-200">
-                        <Check className={`w-3.5 h-3.5 shrink-0 ${isActivePlan ? 'text-amber-400' : tone.accentText}`} />
-                        <span>{feature}</span>
-                      </div>
-                    ))}
+                  {/* Features List with Sequential Animated Checkmarks Inside Circles */}
+                  <div className="flex flex-col gap-2.5 mb-6 border-t border-white/10 pt-3.5">
+                    {plan.features.map((feature, idx) => {
+                      const prevFeaturesCount = plans
+                        .slice(0, index)
+                        .reduce((acc, p) => acc + p.features.length, 0);
+                      const globalIndex = prevFeaturesCount + idx;
+
+                      return (
+                        <AnimatedCheckItem
+                          key={idx}
+                          text={feature}
+                          orderIndex={globalIndex}
+                          tone={tone}
+                          isActivePlan={isActivePlan}
+                        />
+                      );
+                    })}
                   </div>
                 </div>
 
                 <motion.button
-                  whileTap={{ scale: 0.95 }}
+                  whileHover={!isActivePlan ? { scale: 1.02 } : undefined}
+                  whileTap={!isActivePlan ? { scale: 0.96 } : undefined}
                   disabled={isActivePlan}
                   onClick={() => handleSelectPlan(plan)}
-                  className={`w-full py-3 rounded-2xl font-extrabold text-xs transition-all cursor-pointer select-none flex items-center justify-center gap-1.5 ${
+                  className={`w-full py-3 px-4 rounded-2xl font-black text-xs transition-all cursor-pointer select-none flex items-center justify-center gap-1.5 shadow-md ${
                     isActivePlan
                       ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 cursor-default'
                       : tone.button

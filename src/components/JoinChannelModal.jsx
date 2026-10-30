@@ -93,7 +93,7 @@ export const JoinChannelModal = ({ isOpen, onClose, item }) => {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={handleCancel}
-          className="absolute inset-0 bg-black/90 backdrop-blur-xl"
+          className="absolute inset-0 bg-black/80 backdrop-blur-md"
         />
 
         {/* STEP 1: Join Required Channels Popup (Shows FIRST TIME until user clicks I've Joined) */}
@@ -103,50 +103,70 @@ export const JoinChannelModal = ({ isOpen, onClose, item }) => {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
             transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-            className="relative z-10 w-full max-w-sm glass-panel rounded-3xl border border-cyan-500/40 bg-[#0F172A]/95 text-white p-5 shadow-2xl overflow-hidden flex flex-col gap-4"
+            className="relative z-10 w-full max-w-sm rounded-3xl border border-white/12 bg-[#0A0D16]/95 text-white p-5 sm:p-6 shadow-[0_25px_60px_rgba(0,0,0,0.95),0_0_40px_rgba(34,158,217,0.18)] overflow-hidden flex flex-col gap-4 backdrop-blur-3xl"
           >
+            {/* Specular Top Chamfer Highlight */}
+            <div className="absolute top-0 inset-x-0 h-[1.5px] bg-gradient-to-r from-transparent via-[#24A1DE]/80 to-transparent pointer-events-none" />
+            <div className="absolute -top-12 -right-12 w-36 h-36 bg-[#24A1DE]/12 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute -bottom-12 -left-12 w-36 h-36 bg-blue-600/8 rounded-full blur-3xl pointer-events-none" />
+
             {/* Modal Title */}
-            <div className="flex items-center gap-2 border-b border-white/10 pb-3">
-              <ShieldAlert className="w-5 h-5 text-amber-400 shrink-0" />
-              <h2 className="text-sm font-black text-white">Join Required Channels</h2>
+            <div className="flex items-center justify-between border-b border-white/10 pb-3 relative z-10">
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-400 shrink-0">
+                  <ShieldAlert className="w-4 h-4" />
+                </div>
+                <div>
+                  <h2 className="text-sm font-extrabold text-white">Join Required Channel</h2>
+                  <p className="text-[10px] text-gray-400">Unlock high-speed streaming & downloads</p>
+                </div>
+              </div>
+              <button
+                onClick={handleCancel}
+                className="p-1 rounded-full text-gray-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
             </div>
 
             {/* Modal Body */}
-            <div className="flex flex-col gap-3 text-xs text-gray-200">
-              <p className="leading-relaxed">
-                To access <strong>"{item.title}"</strong> with high-speed streaming & downloads, please join our Telegram channel below.
+            <div className="flex flex-col gap-3 text-xs text-gray-200 relative z-10">
+              <p className="leading-relaxed text-gray-300">
+                To access <strong className="text-white">"{item.title}"</strong> with zero buffering and priority cloud speed, join our official Telegram channel:
               </p>
 
-              {/* Join Channel Button */}
-              <button
+              {/* Telegram Official Join Channel Button */}
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.97 }}
                 onClick={handleJoinChannel}
-                className="w-full py-3 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:brightness-110 active:scale-95 text-white font-black text-xs flex items-center justify-center gap-2 transition-all shadow-lg shadow-cyan-500/30 cursor-pointer"
+                className="relative group overflow-hidden w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-[#2AABEE] via-[#229ED9] to-[#0088cc] hover:brightness-110 active:scale-95 text-white font-black text-xs flex items-center justify-center gap-2.5 transition-all shadow-lg shadow-[#229ED9]/35 border border-[#229ED9]/60 cursor-pointer"
               >
-                <Send className="w-4 h-4" />
-                <span>Join Terabox / Update</span>
-              </button>
+                <div className="absolute top-0 inset-x-0 h-[1px] bg-white/40 pointer-events-none" />
+                <div className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center shadow-inner">
+                  <Send className="w-3 h-3 text-white fill-white ml-0.5" />
+                </div>
+                <span>Join Official Telegram Channel</span>
+              </motion.button>
 
               {/* 70 / 30 Single Row Ratio: [I've Joined (70%) | Cancel (30%)] */}
               <div className="flex items-center gap-2 pt-1">
                 <button
                   onClick={handleIveJoined}
-                  className="w-[70%] py-3 rounded-2xl bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 border border-emerald-500/40 active:scale-95 font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-md"
+                  className="w-[70%] py-3 rounded-2xl bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 border border-emerald-500/40 active:scale-95 font-black text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-md shadow-emerald-500/10"
                 >
-                  <CheckCircle2 className="w-4 h-4" />
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400" />
                   <span>I've Joined</span>
                 </button>
 
                 <button
                   onClick={handleCancel}
-                  className="w-[30%] py-3 rounded-2xl glass-panel text-gray-400 hover:text-white border border-white/10 active:scale-95 font-semibold text-xs transition-all cursor-pointer flex items-center justify-center"
+                  className="w-[30%] py-3 rounded-2xl bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white border border-white/10 active:scale-95 font-bold text-xs transition-all cursor-pointer flex items-center justify-center"
                 >
                   Cancel
                 </button>
               </div>
             </div>
-
-            {/* X Close Button positioned at bottom */}
-          
           </motion.div>
         )}
 
