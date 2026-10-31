@@ -16,6 +16,7 @@ import { Profile } from './pages/Profile';
 import { Premium } from './pages/Premium';
 import { VideoPlayer } from './pages/VideoPlayer';
 import { UpiPayment } from './pages/UpiPayment';
+import { Owner } from './pages/Owner';
 
 // Popup Container Inner Wrapper
 const CreditPopupWrapper = () => {
@@ -51,6 +52,7 @@ const AnimatedRoutes = () => {
         <Route path="/" element={<Explorer />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/premium" element={<Premium />} />
+        <Route path="/owner" element={<Owner />} />
         <Route path="/player/:id" element={<VideoPlayer />} />
         <Route path="/payment/upi" element={<UpiPayment />} />
       </Routes>

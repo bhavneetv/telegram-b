@@ -28,7 +28,15 @@ import {
   Clock,
   AlertTriangle,
   Zap,
-  Infinity
+  Infinity,
+  Lock,
+  Unlock,
+  Send,
+  Bot,
+  Sparkles,
+  CheckCircle2,
+  ArrowRight,
+  ShieldCheck
 } from 'lucide-react';
 import { useAppState } from '../context/AppStateContext';
 import { DUMMY_CONTENT } from '../data/dummyContent';
@@ -36,6 +44,8 @@ import { formatFileSize } from '../utils/formatters';
 import { triggerHaptic } from '../utils/telegram';
 import { AdCard } from '../components/AdCard';
 import { MovingInfinityIcon } from '../components/MovingInfinityIcon';
+import { ModalShell } from '../components/ModalShell';
+import confetti from 'canvas-confetti';
 import { toast } from 'sonner';
 
 // Distinct, vibrant color theme for each download stage:
@@ -83,6 +93,7 @@ export const VideoPlayer = () => {
     favourites,
     toggleFavourite,
     isPremium,
+    setIsPremium,
     userProfile,
     showCreditPopup,
     triggerVideoPlayNotification
@@ -91,6 +102,11 @@ export const VideoPlayer = () => {
   const mediaItem = DUMMY_CONTENT.find((item) => item.id === id) || DUMMY_CONTENT[0];
   const isFavourited = favourites.includes(mediaItem.id);
   const isPortrait = mediaItem.orientation === 'portrait';
+
+  // Telegram Auto-Delivery (1-Tap Lock Feature) States
+  const [showAutoDeliveryModal, setShowAutoDeliveryModal] = useState(false);
+  const [showDeliveredModal, setShowDeliveredModal] = useState(false);
+  const [isDelivering, setIsDelivering] = useState(false);
 
   // Video Ref & States
   const videoRef = useRef(null);
@@ -419,6 +435,33 @@ export const VideoPlayer = () => {
       setTimeout(() => setDownloadStage('ready'), 2200);
     } else {
       toast.info(`Preparing high-speed link (${downloadStage})...`);
+    }
+  };
+
+  // Telegram 1-Tap Auto-Delivery Handler
+  const handleAutoDeliveryClick = () => {
+    triggerHaptic('medium');
+    if (!isPremium) {
+      // Free User: Show Auto Delivery (Premium) explanation modal
+      setShowAutoDeliveryModal(true);
+    } else {
+      // Premium User: 1-Tap automatic delivery to Telegram chat
+      setIsDelivering(true);
+      toast.loading(`Forwarding "${mediaItem.title}" to Telegram...`, { id: 'tg-delivery' });
+
+      setTimeout(() => {
+        setIsDelivering(false);
+        triggerHaptic('success');
+        try {
+          confetti({
+            particleCount: 55,
+            spread: 70,
+            origin: { y: 0.65 }
+          });
+        } catch (e) {}
+        toast.success(`🚀 Delivered to your Telegram chat!`, { id: 'tg-delivery' });
+        setShowDeliveredModal(true);
+      }, 1200);
     }
   };
 
@@ -922,42 +965,142 @@ export const VideoPlayer = () => {
           </div>
         </motion.div>
 
-        {/* 3-STAGE DOWNLOAD BUTTON WITH LEFT-TO-RIGHT GRADIENT SWEEP + PROGRESS BAR */}
+        {/* DOWNLOAD & TELEGRAM AUTO-DELIVERY (LOCK) BUTTON ROW */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.35, delay: 0.1 }}
           className="p-2.5 rounded-xl border border-white/5 bg-[#0a0c10]/95 flex flex-col gap-2 shadow-md"
         >
-          <button
-            onClick={handleDownloadClick}
-            style={{ backgroundImage: stage.gradient }}
-            className={`download-sweep w-full py-2.5 px-4 rounded-xl text-xs font-black flex items-center justify-center gap-2 transition-all duration-500 cursor-pointer shadow-lg relative overflow-hidden border ${stage.borderClass} ${stage.textClass}`}
-          >
-            <AnimatePresence mode="wait">
+          <div className="flex items-center gap-2 w-full">
+            {/* Standard Download Button */}
+            <button
+              onClick={handleDownloadClick}
+              style={{ backgroundImage: stage.gradient }}
+              className={`download-sweep flex-1 py-2.5 px-3 sm:px-4 rounded-xl text-xs font-black flex items-center justify-center gap-2 transition-all duration-500 cursor-pointer shadow-lg relative overflow-hidden border ${stage.borderClass} ${stage.textClass}`}
+            >
+              <AnimatePresence mode="wait">
+                <motion.span
+                  key={downloadStage}
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -6 }}
+                  transition={{ duration: 0.25 }}
+                  className="flex items-center gap-2 truncate"
+                >
+                  {downloadStage === 'ready' ? (
+                    <StageIcon className="w-4 h-4 shrink-0" />
+                  ) : downloadStage === 'failed' ? (
+                    <AlertTriangle className="w-4 h-4 text-white shrink-0" />
+                  ) : (
+                    <Loader2 className="w-4 h-4 animate-spin text-white shrink-0" />
+                  )}
+                  <span className="truncate">
+                    {downloadStage === 'ready'
+                      ? `Download (${formatFileSize(mediaItem.sizeMB)})`
+                      : stage.label}
+                  </span>
+                </motion.span>
+              </AnimatePresence>
+            </button>
+
+            {/* Telegram Auto Delivery (Lock Button with high-visibility animations) */}
+            <motion.button
+              whileTap={{ scale: 0.94 }}
+              onClick={handleAutoDeliveryClick}
+              disabled={isDelivering}
+              className={`relative group shrink-0 flex items-center gap-1.5 py-2.5 px-3 sm:px-3.5 rounded-xl font-black text-xs cursor-pointer transition-all duration-300 overflow-hidden shadow-lg ${
+                isPremium
+                  ? 'bg-gradient-to-r from-cyan-600 via-sky-500 to-blue-600 text-white border border-cyan-400/60 shadow-[0_0_20px_rgba(6,182,212,0.45)]'
+                  : 'bg-gradient-to-r from-amber-500/20 via-yellow-500/15 to-amber-500/25 text-amber-300 border border-amber-500/50 shadow-[0_0_18px_rgba(245,158,11,0.25)] hover:border-amber-400'
+              }`}
+            >
+              {/* Animated pulsating halo ring to catch attention */}
               <motion.span
-                key={downloadStage}
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -6 }}
-                transition={{ duration: 0.25 }}
-                className="flex items-center gap-2"
-              >
-                {downloadStage === 'ready' ? (
-                  <StageIcon className="w-4 h-4" />
-                ) : downloadStage === 'failed' ? (
-                  <AlertTriangle className="w-4 h-4 text-white" />
-                ) : (
+                animate={{
+                  opacity: [0.35, 0.9, 0.35],
+                  scale: [0.97, 1.05, 0.97]
+                }}
+                transition={{
+                  duration: 2.2,
+                  repeat: Infinity,
+                  ease: 'easeInOut'
+                }}
+                className={`absolute inset-0 rounded-xl pointer-events-none ${
+                  isPremium
+                    ? 'border-2 border-cyan-400/40 shadow-[0_0_15px_rgba(6,182,212,0.5)]'
+                    : 'border-2 border-amber-400/40 shadow-[0_0_15px_rgba(245,158,11,0.5)]'
+                }`}
+              />
+
+              {/* Shimmer sweep effect */}
+              <motion.span
+                animate={{
+                  x: ['-120%', '160%']
+                }}
+                transition={{
+                  repeat: Infinity,
+                  duration: 2.6,
+                  ease: 'linear',
+                  repeatDelay: 1.5
+                }}
+                className="absolute inset-y-0 w-1/2 bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-12 pointer-events-none"
+              />
+
+              {/* Animated Lock Icon with attention-grabbing wiggle */}
+              <div className="relative flex items-center justify-center shrink-0">
+                {isDelivering ? (
                   <Loader2 className="w-4 h-4 animate-spin text-white" />
+                ) : isPremium ? (
+                  <motion.div
+                    animate={{
+                      scale: [1, 1.15, 1],
+                      rotate: [0, -8, 8, 0]
+                    }}
+                    transition={{
+                      duration: 2.5,
+                      repeat: Infinity,
+                      ease: 'easeInOut'
+                    }}
+                  >
+                    <Send className="w-4 h-4 text-cyan-200 fill-cyan-400/30" />
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    animate={{
+                      rotate: [0, -14, 14, -10, 10, 0],
+                      scale: [1, 1.12, 1.12, 1]
+                    }}
+                    transition={{
+                      duration: 1.6,
+                      repeat: Infinity,
+                      repeatDelay: 2.8,
+                      ease: 'easeInOut'
+                    }}
+                    className="relative"
+                  >
+                    <Lock className="w-4 h-4 text-amber-300 drop-shadow-[0_0_8px_rgba(245,158,11,0.8)]" />
+                    {/* Small warning beacon dot */}
+                    <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-amber-400 animate-ping pointer-events-none" />
+                  </motion.div>
                 )}
-                <span>
-                  {downloadStage === 'ready'
-                    ? `Download Now (${formatFileSize(mediaItem.sizeMB)})`
-                    : stage.label}
-                </span>
-              </motion.span>
-            </AnimatePresence>
-          </button>
+              </div>
+
+              {/* Button Label */}
+              <span className="font-extrabold whitespace-nowrap text-xs tracking-tight">
+                {isDelivering ? (
+                  'Delivering...'
+                ) : isPremium ? (
+                  'Auto Delivery'
+                ) : (
+                  <span className="flex items-center gap-1">
+                    Auto Delivery
+                    <span className="text-[9px] px-1 py-0.2 rounded bg-amber-500/30 text-amber-200 font-mono font-black border border-amber-400/40">VIP</span>
+                  </span>
+                )}
+              </span>
+            </motion.button>
+          </div>
 
           {/* Slim animated progress bar */}
           <div className="w-full h-1 rounded-full bg-white/10 overflow-hidden">
@@ -1163,6 +1306,217 @@ export const VideoPlayer = () => {
           </div>
         )}
       </div>
+
+      {/* 1. AUTO DELIVERY (PREMIUM) EXCLUSIVE POPUP */}
+      <ModalShell
+        isOpen={showAutoDeliveryModal}
+        onClose={() => setShowAutoDeliveryModal(false)}
+        title="⚡ Auto Delivery (Premium)"
+        className="bg-[#0A0D15]/98 border border-amber-500/30 max-w-lg shadow-[0_12px_50px_rgba(245,158,11,0.25)]"
+      >
+        <div className="flex flex-col gap-4 text-white">
+          {/* Top VIP Badge & Hero Banner */}
+          <div className="relative overflow-hidden rounded-2xl p-4 bg-gradient-to-br from-amber-950/60 via-[#131109] to-slate-950 border border-amber-500/40 text-center flex flex-col items-center gap-2">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 rounded-full blur-2xl pointer-events-none" />
+
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-amber-500 to-yellow-400 p-0.5 shadow-[0_0_25px_rgba(245,158,11,0.4)]">
+              <div className="w-full h-full rounded-2xl bg-[#0a0c10] flex items-center justify-center">
+                <Send className="w-7 h-7 text-amber-400 fill-amber-400/20" />
+              </div>
+            </div>
+
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/15 border border-amber-500/40 text-[10px] font-black text-amber-300 uppercase tracking-wider">
+              <Crown className="w-3.5 h-3.5 fill-amber-300 text-amber-300" />
+              <span>VIP Exclusive Feature</span>
+            </div>
+
+            <h3 className="text-base sm:text-lg font-black text-white leading-tight">
+              1-Tap Automatic Telegram Delivery
+            </h3>
+
+            <p className="text-xs text-gray-300 max-w-xs leading-relaxed">
+              Premium members tap once and the video is delivered to their private Telegram chat automatically!
+            </p>
+          </div>
+
+          {/* Feature highlights with bold accents */}
+          <div className="flex flex-col gap-2.5">
+            <div className="p-3 rounded-xl bg-white/[0.03] border border-white/5 flex items-start gap-3">
+              <div className="p-2 rounded-lg bg-amber-500/10 text-amber-400 border border-amber-500/20 shrink-0 mt-0.5">
+                <Zap className="w-4 h-4" />
+              </div>
+              <div className="text-xs leading-relaxed">
+                <span className="font-extrabold text-white block">⚡ Instant 1-Tap Forwarding</span>
+                <span className="text-gray-300">
+                  Tap once and our official bot automatically delivers the full-speed video directly into your <strong>Telegram Chat (@{userProfile.username})</strong>!
+                </span>
+              </div>
+            </div>
+
+            <div className="p-3 rounded-xl bg-white/[0.03] border border-white/5 flex items-start gap-3">
+              <div className="p-2 rounded-lg bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 shrink-0 mt-0.5">
+                <ShieldCheck className="w-4 h-4" />
+              </div>
+              <div className="text-xs leading-relaxed">
+                <span className="font-extrabold text-white block">🚀 10× Blazing Download Speed</span>
+                <span className="text-gray-300">
+                  Streamed directly via <strong>Telegram's worldwide CDN edge servers</strong> without browser buffering, timeouts, or ISP speed limits.
+                </span>
+              </div>
+            </div>
+
+            <div className="p-3 rounded-xl bg-white/[0.03] border border-white/5 flex items-start gap-3">
+              <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shrink-0 mt-0.5">
+                <CheckCircle2 className="w-4 h-4" />
+              </div>
+              <div className="text-xs leading-relaxed">
+                <span className="font-extrabold text-white block">💾 Saved to Telegram Forever</span>
+                <span className="text-gray-300">
+                  Stored securely in your <strong>Saved Messages</strong> without expiring links, 404 errors, or consuming phone memory until downloaded.
+                </span>
+              </div>
+            </div>
+
+            <div className="p-3 rounded-xl bg-white/[0.03] border border-white/5 flex items-start gap-3">
+              <div className="p-2 rounded-lg bg-purple-500/10 text-purple-400 border border-purple-500/20 shrink-0 mt-0.5">
+                <Sparkles className="w-4 h-4" />
+              </div>
+              <div className="text-xs leading-relaxed">
+                <span className="font-extrabold text-white block">🚫 100% Ad-Free & Watermark-Free</span>
+                <span className="text-gray-300">
+                  Pure original <strong>1080p 4K MP4</strong> with <strong>zero watermarks</strong>, zero interstitial ads, and instant background playback.
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Quick Comparison Box */}
+          <div className="grid grid-cols-2 gap-2 p-3 rounded-xl bg-black/40 border border-white/10 text-[11px]">
+            <div className="flex flex-col gap-1 border-r border-white/10 pr-2">
+              <span className="font-bold text-gray-400 uppercase tracking-wider text-[9px]">Free Users</span>
+              <span className="text-gray-400">• Manual browser download</span>
+              <span className="text-gray-400">• Must keep browser tab open</span>
+              <span className="text-gray-400">• Links expire in 24 hours</span>
+            </div>
+            <div className="flex flex-col gap-1 pl-2">
+              <span className="font-black text-amber-400 uppercase tracking-wider text-[9px] flex items-center gap-1">
+                <Crown className="w-3 h-3 fill-amber-400" /> VIP Premium
+              </span>
+              <span className="text-white font-bold">• 1-Tap Automatic Bot Send</span>
+              <span className="text-white font-bold">• Downloads in background</span>
+              <span className="text-amber-300 font-bold">• Permanent forever cloud</span>
+            </div>
+          </div>
+
+          {/* CTA Buttons */}
+          <div className="flex flex-col gap-2 pt-1">
+            <motion.button
+              whileTap={{ scale: 0.96 }}
+              onClick={() => {
+                triggerHaptic('medium');
+                setShowAutoDeliveryModal(false);
+                navigate('/premium');
+              }}
+              className="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 hover:brightness-110 text-slate-950 font-black text-xs sm:text-sm shadow-xl shadow-amber-500/30 flex items-center justify-center gap-2 cursor-pointer transition-all"
+            >
+              <Crown className="w-4 h-4 fill-slate-950" />
+              <span>Unlock Auto Delivery — Starting ₹10</span>
+              <ArrowRight className="w-4 h-4" />
+            </motion.button>
+
+            <div className="flex items-center gap-2">
+              {/* Quick toggle for developer / testing */}
+              <button
+                type="button"
+                onClick={() => {
+                  triggerHaptic('medium');
+                  setIsPremium(true);
+                  setShowAutoDeliveryModal(false);
+                  toast.success('VIP Mode activated! Tap Auto Delivery again to test 1-Tap send.');
+                }}
+                className="flex-1 py-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[11px] font-bold transition-all cursor-pointer"
+              >
+                ⚡ Test as VIP Member
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setShowAutoDeliveryModal(false)}
+                className="py-2 px-4 rounded-xl bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white text-[11px] font-semibold transition-all cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      </ModalShell>
+
+      {/* 2. PREMIUM 1-TAP DELIVERED CONFIRMATION MODAL */}
+      <ModalShell
+        isOpen={showDeliveredModal}
+        onClose={() => setShowDeliveredModal(false)}
+        title="🎉 Delivered to Telegram"
+        className="bg-[#0A0D15]/98 border border-cyan-500/40 max-w-md shadow-[0_12px_50px_rgba(6,182,212,0.3)]"
+      >
+        <div className="flex flex-col items-center text-center gap-4 text-white">
+          <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-cyan-500 via-sky-400 to-blue-500 p-0.5 shadow-[0_0_30px_rgba(6,182,212,0.5)]">
+            <div className="w-full h-full rounded-full bg-[#0a0c10] flex items-center justify-center text-cyan-400">
+              <CheckCircle2 className="w-8 h-8 fill-cyan-400/20 text-cyan-300" />
+            </div>
+          </div>
+
+          <div>
+            <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-cyan-500/15 border border-cyan-500/40 text-[10px] font-black text-cyan-300 uppercase tracking-wider mb-2">
+              <Bot className="w-3.5 h-3.5" />
+              <span>Auto-Forward Completed</span>
+            </div>
+            <h3 className="text-base sm:text-lg font-black text-white">
+              Video Sent to Your Chat!
+            </h3>
+            <p className="text-xs text-gray-300 mt-1 max-w-xs">
+              <strong>{mediaItem.title}</strong> ({formatFileSize(mediaItem.sizeMB)}) has been delivered directly to your Telegram chat <strong>@{userProfile.username}</strong>.
+            </p>
+          </div>
+
+          <div className="w-full p-3 rounded-2xl bg-black/40 border border-white/10 flex flex-col gap-2 text-left text-xs">
+            <div className="flex items-center justify-between text-gray-400">
+              <span>Status</span>
+              <span className="font-bold text-emerald-400 flex items-center gap-1">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" /> Delivered (100%)
+              </span>
+            </div>
+            <div className="flex items-center justify-between text-gray-400">
+              <span>Recipient</span>
+              <span className="font-mono font-bold text-white">@{userProfile.username}</span>
+            </div>
+            <div className="flex items-center justify-between text-gray-400">
+              <span>File Quality</span>
+              <span className="font-bold text-cyan-300">1080p 4K (Watermark-Free)</span>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-2 w-full pt-1">
+            <button
+              onClick={() => {
+                triggerHaptic('light');
+                setShowDeliveredModal(false);
+                window.open(`https://t.me/share/url?url=${encodeURIComponent(mediaItem.url)}&text=${encodeURIComponent('Enjoying ' + mediaItem.title)}`, '_blank');
+              }}
+              className="w-full py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 hover:brightness-110 text-black font-black text-xs shadow-lg shadow-cyan-500/30 flex items-center justify-center gap-2 cursor-pointer transition-all"
+            >
+              <Send className="w-4 h-4 fill-black" />
+              <span>Open in Telegram Chat</span>
+            </button>
+
+            <button
+              onClick={() => setShowDeliveredModal(false)}
+              className="w-full py-2 rounded-xl bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white text-xs font-semibold transition-all cursor-pointer"
+            >
+              Done
+            </button>
+          </div>
+        </div>
+      </ModalShell>
     </div>
   );
 };

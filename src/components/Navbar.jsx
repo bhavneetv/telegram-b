@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { User, Compass, Crown } from 'lucide-react';
+import { User, Compass, Crown, Settings } from 'lucide-react';
 import { triggerHaptic } from '../utils/telegram';
 import { useAppState } from '../context/AppStateContext';
 
@@ -43,11 +43,12 @@ export const Navbar = () => {
     return null;
   }
 
-  // Tab order: Profile, Explore, Premium
+  // Tab order matching Screenshot: Owner, Explore, Premium, Profile
   const navItems = [
-    { path: '/profile', label: 'Profile', icon: User },
+    { path: '/owner', label: 'Owner', icon: Settings, isOwner: true },
     { path: '/', label: 'Explore', icon: Compass },
     { path: '/premium', label: 'Premium', icon: Crown, isSpecial: true },
+    { path: '/profile', label: 'Profile', icon: User },
   ];
 
   const handleTabClick = (path) => {
@@ -81,14 +82,18 @@ export const Navbar = () => {
               whileTap={{ scale: 0.92 }}
               onClick={() => handleTabClick(item.path)}
               className={`relative flex items-center gap-2 rounded-full transition-all duration-300 cursor-pointer ${
-                compact ? 'px-3 py-1.5' : 'px-4 py-2'
+                compact ? 'px-3 py-1.5' : 'px-3.5 py-2'
               } ${
                 isActive
                   ? item.isSpecial
                     ? 'bg-gradient-to-r from-amber-500 to-yellow-500 text-black font-extrabold shadow-lg shadow-amber-500/30'
+                    : item.isOwner
+                    ? 'bg-cyan-950/70 text-cyan-300 border border-cyan-500/50 shadow-lg shadow-cyan-500/20 font-bold'
                     : 'bg-white/15 text-white border border-white/20 shadow-lg font-bold'
                   : item.isSpecial
                   ? 'text-amber-400 hover:text-amber-300 font-semibold'
+                  : item.isOwner
+                  ? 'text-cyan-400/70 hover:text-cyan-300 font-medium'
                   : 'text-gray-400 hover:text-white font-medium'
               }`}
             >
@@ -97,7 +102,7 @@ export const Navbar = () => {
                 <span className="absolute inset-0 rounded-full bg-amber-500/10 animate-pulse pointer-events-none" />
               )}
 
-              {/* Crisp Stroke Icon rendering (No solid black fills) */}
+              {/* Crisp Stroke Icon rendering */}
               <Icon
                 className={`transition-transform duration-300 ${
                   compact ? 'w-4 h-4' : 'w-4 h-4 sm:w-5 sm:h-5'
@@ -105,9 +110,13 @@ export const Navbar = () => {
                   isActive
                     ? item.isSpecial
                       ? 'stroke-[2.5] text-black fill-none'
+                      : item.isOwner
+                      ? 'stroke-[2.5] text-cyan-400 fill-none'
                       : 'stroke-[2.5] text-white fill-none'
                     : item.isSpecial
                     ? 'stroke-[2] text-amber-400 fill-none'
+                    : item.isOwner
+                    ? 'stroke-[2] text-cyan-400/70 fill-none'
                     : 'stroke-[2] text-gray-400 fill-none'
                 }`}
               />
